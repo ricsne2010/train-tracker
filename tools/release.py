@@ -14,6 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 INIT = ROOT / "src" / "train_tracker" / "__init__.py"
 CHANGELOG = ROOT / "CHANGELOG.md"
+CO_AUTHOR = "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"   # the project is built with Claude Code
 
 
 def run(*cmd):
@@ -37,7 +38,7 @@ def main():
 
     run(sys.executable, "-m", "pytest", "-q")
     run("git", "add", str(INIT), str(CHANGELOG))
-    run("git", "commit", "-m", f"Release v{version}")
+    run("git", "commit", "-m", f"Release v{version}\n\n{CO_AUTHOR}")
     run("git", "tag", "-a", f"v{version}", "-m", f"v{version}")
     print(f"\nTagged v{version}. Publish with:\n  git push && git push origin v{version}")
 
