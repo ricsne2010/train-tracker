@@ -5,7 +5,9 @@ All notable changes to this project are listed here. Versions follow [Semantic V
 ## [Unreleased]
 
 - Freight and other active track (main lines, industrial track, sidings, yards) from NARN, loaded by area
-  from city-level zoom and cached on disk; toggle under Map in the panel.
+  from city-level zoom and cached on disk.
+- Map layers filters: turn each kind of passenger or freight line on or off, and hide individual railroads
+  from the list of railroads in view; remembered between visits.
 - Click any track for its type, owner, subdivision, yard and number of tracks.
 - Track geometry is sent gzip-compressed.
 

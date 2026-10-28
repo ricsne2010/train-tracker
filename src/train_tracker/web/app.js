@@ -37,7 +37,25 @@ const motion = new Map();           // key -> client-side motion state (snap, he
 let feeds = [];
 let net = null;                     // TrackNet, once the track file has loaded
 const hidden = new Set(JSON.parse(safeGet("hiddenAgencies") || "[]"));
-let showFreight = safeGet("showFreight") !== "0";
+// Line filters: which kinds of track to draw, and railroads (by NARN owner code) to hide.
+const LINE_GROUPS = {
+  amtrak:     { label: "Amtrak and intercity", source: "track", test: ["in", ["get", "p"], ["literal", ["A", "B", "I", "E"]]] },
+  commuter:   { label: "Commuter rail", source: "track", test: ["in", ["get", "p"], ["literal", ["C", "B", "E"]]] },
+  otherPass:  { label: "Transit, tourist and other", source: "track",
+                test: ["!", ["in", ["get", "p"], ["literal", ["A", "B", "I", "E", "C"]]]] },
+  main:       { label: "Main lines", source: "freight", test: ["==", ["get", "n"], "M"] },
+  industrial: { label: "Industrial track", source: "freight", test: ["in", ["get", "n"], ["literal", ["I", "O"]]] },
+  siding:     { label: "Passing sidings", source: "freight", test: ["==", ["get", "n"], "S"] },
+  yard:       { label: "Yards", source: "freight", test: ["==", ["get", "n"], "Y"] },
+};
+function loadJSON(k, fallback) { try { return JSON.parse(safeGet(k)) ?? fallback; } catch { return fallback; } }
+const lineOn = Object.fromEntries(Object.keys(LINE_GROUPS).map((g) => [g, true]));
+Object.assign(lineOn, loadJSON("lineFilters", {}));
+if (safeGet("showFreight") === "0" && !safeGet("lineFilters")) {   // carry over the old freight switch
+  for (const g in LINE_GROUPS) if (LINE_GROUPS[g].source === "freight") lineOn[g] = false;
+}
+const hiddenOwners = new Set(loadJSON("hiddenOwners", []));
+const freightWanted = () => Object.keys(LINE_GROUPS).some((g) => LINE_GROUPS[g].source === "freight" && lineOn[g]);
 
 function safeGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
 function safeSet(k, v) { try { localStorage.setItem(k, v); } catch { /* private mode */ } }
@@ -167,7 +185,10 @@ map.on("load", () => {
     },
   });
   addDetailLayers("track");
-  setFreightVisible(showFreight);
+  for (const layer of map.getStyle().layers) {   // remember each track layer's own filter
+    if (layer.source === "track" || layer.source === "freight") baseFilters.set(layer.id, layer.filter || null);
+  }
+  applyLineFilters();
 
   // Full trains (zoomed in), drawn as polygons that follow the track.
   map.addSource("consists", { type: "geojson", data: emptyFC() });
@@ -246,15 +267,8 @@ const TRACK_LAYERS = ["track", "track-ballast", "freight", "freight-minor", "fre
 const cells = new Map();       // "cx,cy" -> features | "loading" | failure time
 let freightTimer = null;
 
-function setFreightVisible(on) {
-  for (const layer of map.getStyle().layers) {
-    if (layer.source === "freight") map.setLayoutProperty(layer.id, "visibility", on ? "visible" : "none");
-  }
-  if (on) loadFreight();
-}
-
 async function loadFreight() {
-  if (!showFreight || map.getZoom() < FREIGHT_Z - 0.5) return;
+  if (!freightWanted() || map.getZoom() < FREIGHT_Z - 0.5) return;
   const b = map.getBounds(), c = map.getCenter();
   const want = [];
   for (let cx = Math.floor(b.getWest() / CELL); cx <= Math.floor(b.getEast() / CELL); cx++) {
@@ -300,10 +314,89 @@ function rebuildFreight() {
       }
     }
     map.getSource("freight").setData({ type: "FeatureCollection", features });
+    renderOwners();
   }, 150);
 }
 
 map.on("moveend", loadFreight);
+
+// ---------- line filters ----------
+const baseFilters = new Map();   // layer id -> the layer's own filter (e.g. "has 2+ tracks")
+
+function applyLineFilters() {
+  if (!baseFilters.size) return;
+  const ownerTest = hiddenOwners.size
+    ? ["!", ["in", ["coalesce", ["get", "o"], ""], ["literal", [...hiddenOwners]]]] : null;
+  const kindTest = (src) => {
+    const tests = Object.entries(LINE_GROUPS).filter(([g, d]) => d.source === src && lineOn[g]).map(([, d]) => d.test);
+    return tests.length ? ["any", ...tests] : ["==", 1, 0];
+  };
+  for (const [id, base] of baseFilters) {
+    const src = map.getLayer(id).source;
+    map.setFilter(id, ["all", ...[base, kindTest(src), ownerTest].filter(Boolean)]);
+  }
+  loadFreight();
+  renderOwners();
+}
+
+function saveLineFilters() {
+  safeSet("lineFilters", JSON.stringify(lineOn));
+  safeSet("hiddenOwners", JSON.stringify([...hiddenOwners]));
+  applyLineFilters();
+}
+
+function renderLineFilters() {
+  for (const src of ["track", "freight"]) {
+    const ul = document.getElementById(src === "track" ? "lines-passenger" : "lines-freight");
+    ul.innerHTML = "";
+    for (const [g, d] of Object.entries(LINE_GROUPS)) {
+      if (d.source !== src) continue;
+      const li = document.createElement("li");
+      li.innerHTML = `<label><input type="checkbox" ${lineOn[g] ? "checked" : ""}> ${esc(d.label)}</label>`;
+      li.querySelector("input").addEventListener("change", (e) => { lineOn[g] = e.target.checked; saveLineFilters(); });
+      ul.appendChild(li);
+    }
+  }
+}
+
+const ownerName = (code) => OWNERS[code] ? `${OWNERS[code]} (${code})` : code;
+
+// Railroads owning the track on screen (plus any hidden ones, so they can be turned back on).
+let ownersTimer = null;
+function renderOwners() {
+  clearTimeout(ownersTimer);
+  ownersTimer = setTimeout(() => {
+    const counts = new Map();
+    const layers = ["track", "freight", "freight-minor", "track-ballast", "freight-ballast"].filter((id) => map.getLayer(id));
+    for (const f of map.queryRenderedFeatures({ layers })) {
+      const o = f.properties.o;
+      if (o) counts.set(o, (counts.get(o) || 0) + 1);
+    }
+    const shown = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([o]) => o);
+    const list = [...new Set([...shown, ...[...hiddenOwners].sort()])];
+    const ul = document.getElementById("owners");
+    ul.innerHTML = list.length ? "" : `<li class="empty">No track in view</li>`;
+    for (const o of list) {
+      const li = document.createElement("li");
+      li.innerHTML = `<label><input type="checkbox" ${hiddenOwners.has(o) ? "" : "checked"}> ${esc(ownerName(o))}</label>`;
+      li.querySelector("input").addEventListener("change", (e) => {
+        e.target.checked ? hiddenOwners.delete(o) : hiddenOwners.add(o);
+        saveLineFilters();
+      });
+      ul.appendChild(li);
+    }
+  }, 300);
+}
+map.on("moveend", renderOwners);
+map.on("idle", () => { if (!document.getElementById("owners").children.length) renderOwners(); });
+
+document.getElementById("layers-reset").addEventListener("click", () => {
+  for (const g in lineOn) lineOn[g] = true;
+  hiddenOwners.clear();
+  renderLineFilters();
+  saveLineFilters();
+});
+renderLineFilters();
 
 // ---------- track popup ----------
 const NET_NAMES = { M: "Main line", I: "Major industrial lead", O: "Industrial track", S: "Passing siding", Y: "Yard track" };
@@ -318,7 +411,7 @@ function showTrackPopup(lngLat, f) {
   const p = f.properties;
   const kind = f.source === "track" ? `Passenger: ${PASSENGER_NAMES[p.p] || p.p}` : NET_NAMES[p.n] || "Track";
   const rows = [
-    ["Owner", p.o ? (OWNERS[p.o] ? `${OWNERS[p.o]} (${p.o})` : p.o) : null],
+    ["Owner", p.o ? ownerName(p.o) : null],
     ["Subdivision", p.s], ["Yard", p.y], ["Tracks", p.t > 1 ? p.t : null],
   ].filter(([, x]) => x);
   if (popup) popup.remove();
@@ -620,11 +713,3 @@ connect();
 
 document.getElementById("toggle").addEventListener("click", () =>
   document.getElementById("panel").classList.toggle("collapsed"));
-
-const freightToggle = document.getElementById("freight-toggle");
-freightToggle.checked = showFreight;
-freightToggle.addEventListener("change", () => {
-  showFreight = freightToggle.checked;
-  safeSet("showFreight", showFreight ? "1" : "0");
-  if (map.getSource("freight")) setFreightVisible(showFreight);
-});

@@ -16,7 +16,10 @@ Live Amtrak and commuter-rail positions on a map of US passenger track, in your 
   Car counts are live for SEPTA and typical for each service elsewhere.
 * **Freight and other track:** from city-level zoom, freight main lines, industrial track, sidings and yards
   appear under the passenger network (fetched by area from NARN and cached in `~/.train-tracker/narn_cells/`).
-  Abandoned, removed and out-of-service lines and rail-trails are left out. Turn it off under **Map** in the panel.
+  Abandoned, removed and out-of-service lines and rail-trails are left out.
+* **Map layers** (in the panel): switch each kind of line on or off (Amtrak and intercity, commuter, transit and
+  tourist; freight main lines, industrial track, passing sidings, yards) and hide any railroad's track from the
+  list of railroads in view. Choices are remembered in the browser; **Show everything** resets them.
 * **Click any track** for its type, owner, subdivision, yard name and number of tracks.
 
 ## Install and run

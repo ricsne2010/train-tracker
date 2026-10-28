@@ -28,9 +28,16 @@
   <ul id="results"></ul>
   <h2>Agencies</h2>
   <ul id="agencies"></ul>
-  <h2>Map</h2>
-  <label class="opt"><input type="checkbox" id="freight-toggle"> Freight and other track
-    <span class="note">shows when zoomed in to city level</span></label>
+  <details id="layers" open>
+    <summary>Map layers</summary>
+    <h3>Passenger lines</h3>
+    <ul id="lines-passenger" class="checks"></ul>
+    <h3>Freight and other track <span class="hint">from city zoom</span></h3>
+    <ul id="lines-freight" class="checks"></ul>
+    <h3>Railroads in view</h3>
+    <ul id="owners" class="checks"></ul>
+    <button id="layers-reset" type="button">Show everything</button>
+  </details>
   <details id="credits">
     <summary>About and credits</summary>
     <div class="about"><img src="img/moon-pi-logo-128.png" alt="Project Moon Pi"><p><strong>US Train Tracker</strong> <span id="version"></span><br>Designed and Created by Project Moon Pi</p></div>
