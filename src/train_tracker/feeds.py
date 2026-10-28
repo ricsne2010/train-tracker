@@ -1,4 +1,5 @@
 """Feed fetchers. Each feed returns a list of normalized Vehicles."""
+import asyncio
 import logging
 import os
 import re
@@ -6,6 +7,7 @@ import time
 from datetime import datetime
 
 import aiohttp
+from google.protobuf.message import DecodeError
 from google.transit import gtfs_realtime_pb2
 
 from .model import Vehicle
@@ -22,19 +24,37 @@ class MissingKey(Exception):
     pass
 
 
-def expand(value):
+def expand(value, env=None):
     """Replace ${NAME} with the environment value; raise MissingKey if it is unset."""
+    env = os.environ if env is None else env
     if isinstance(value, dict):
-        return {k: expand(v) for k, v in value.items()}
+        return {k: expand(v, env) for k, v in value.items()}
     if not isinstance(value, str):
         return value
 
     def sub(m):
-        v = os.environ.get(m.group(1))
+        v = env.get(m.group(1))
         if not v:
             raise MissingKey(m.group(1))
         return v
     return re.sub(r"\$\{(\w+)\}", sub, value)
+
+
+def describe_error(agency, e) -> str:
+    """A short, plain-English reason a feed fetch failed."""
+    if isinstance(e, MissingKey):
+        return f"Fill in {e.args[0]} first."
+    if isinstance(e, aiohttp.ClientResponseError):
+        if e.status in (401, 403):
+            return f"{agency} turned this key down (HTTP {e.status}). Check it was copied in full."
+        return f"{agency} answered with an error (HTTP {e.status})."
+    if isinstance(e, asyncio.TimeoutError):
+        return f"No answer from {agency} within 20 seconds."
+    if isinstance(e, aiohttp.ClientError):
+        return f"Couldn't reach {agency} ({type(e).__name__})."
+    if isinstance(e, DecodeError):
+        return f"{agency} answered, but not with train data."
+    return f"{type(e).__name__}: {e}"
 
 
 class Feed:
@@ -46,6 +66,7 @@ class Feed:
         self.interval = cfg.get("interval_s", 30)
         self.static = statics.get(cfg.get("static"))
         self.fallback_for = cfg.get("fallback_for")
+        self.env = None             # environment for ${KEY} placeholders (None: os.environ)
         # health, reported on /api/status
         self.disabled = None        # reason string if the feed cannot run
         self.last_ok = None
@@ -70,8 +91,8 @@ class Feed:
 class GtfsRtFeed(Feed):
     async def fetch(self, session):
         url = self.cfg["url"]
-        params = expand(self.cfg.get("params", {}))
-        headers = expand(self.cfg.get("headers", {}))
+        params = expand(self.cfg.get("params", {}), self.env)
+        headers = expand(self.cfg.get("headers", {}), self.env)
         async with session.get(url, params=params, headers=headers, timeout=TIMEOUT) as r:
             r.raise_for_status()
             body = await r.read()
@@ -168,7 +189,7 @@ class NjtFeed(GtfsRtFeed):
             return await r.read()
 
     async def fetch(self, session):
-        user, pw = expand(self.cfg["username"]), expand(self.cfg["password"])
+        user, pw = expand(self.cfg["username"], self.env), expand(self.cfg["password"], self.env)
         if not self.token:
             import json
             resp = json.loads(await self._post(session, "getToken", {"username": user, "password": pw}))

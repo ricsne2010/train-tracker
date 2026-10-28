@@ -65,10 +65,19 @@
       "kind": "gtfsrt",
       "mode": "commuter",
       "url": "https://gtfspublic.metrarr.com/gtfs/public/positions",
-      "params": {"api_token": "${METRA_API_TOKEN}"},
-      "headers": {"Authorization": "Bearer ${METRA_API_TOKEN}"},
+      "params": {
+        "api_token": "${METRA_API_TOKEN}"
+      },
+      "headers": {
+        "Authorization": "Bearer ${METRA_API_TOKEN}"
+      },
       "interval_s": 30,
-      "credit": "Metra"
+      "credit": "Metra",
+      "signup": "https://metra.com/developers",
+      "signup_help": "Accept Metra's licence agreement and fill in the short form; Metra emails you an API token.",
+      "key_labels": {
+        "METRA_API_TOKEN": "API token"
+      }
     },
     {
       "id": "caltrain",
@@ -76,9 +85,17 @@
       "kind": "gtfsrt",
       "mode": "commuter",
       "url": "https://api.511.org/transit/vehiclepositions",
-      "params": {"api_key": "${API_511_KEY}", "agency": "CT"},
+      "params": {
+        "api_key": "${API_511_KEY}",
+        "agency": "CT"
+      },
       "interval_s": 60,
-      "credit": "511.org"
+      "credit": "511.org",
+      "signup": "https://511.org/open-data/token",
+      "signup_help": "Caltrain's live data comes through 511 SF Bay. Enter your email on the token page and 511 emails you a key.",
+      "key_labels": {
+        "API_511_KEY": "511 API key"
+      }
     },
     {
       "id": "metrolink",
@@ -86,9 +103,16 @@
       "kind": "gtfsrt",
       "mode": "commuter",
       "url": "https://metrolink-gtfsrt.gbsdigital.us/feed/gtfsrt-vehicles",
-      "headers": {"x-api-key": "${METROLINK_API_KEY}"},
+      "headers": {
+        "x-api-key": "${METROLINK_API_KEY}"
+      },
       "interval_s": 30,
-      "credit": "Metrolink"
+      "credit": "Metrolink",
+      "signup": "https://metrolinktrains.com/about/gtfs/gtfs-rt-access/",
+      "signup_help": "Enter your email on Metrolink's GTFS-RT access page and the key is emailed to you.",
+      "key_labels": {
+        "METROLINK_API_KEY": "API key"
+      }
     },
     {
       "id": "njt",
@@ -99,7 +123,13 @@
       "username": "${NJT_USERNAME}",
       "password": "${NJT_PASSWORD}",
       "interval_s": 30,
-      "credit": "NJ Transit"
+      "credit": "NJ Transit",
+      "signup": "https://developer.njtransit.com/registration/",
+      "signup_help": "Register for a RailData developer account. NJ Transit uses the account's username and password, not a single key.",
+      "key_labels": {
+        "NJT_USERNAME": "Username",
+        "NJT_PASSWORD": "Password"
+      }
     }
   ]
 }

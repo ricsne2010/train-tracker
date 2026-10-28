@@ -11,6 +11,10 @@ All notable changes to this project are listed here. Versions follow [Semantic V
 - Click any track for its type, owner, subdivision, yard and number of tracks.
 - Track geometry is sent gzip-compressed.
 - Metra key is also sent as a Bearer header; corrected the Metrolink signup link; API key steps in the README.
+- API keys page (panel → API keys…): signup link per agency, Test a key against the live feed before saving,
+  Save to start the feed without a restart, Remove to switch it off. Only changeable from the server's own
+  computer unless started with `--allow-remote-settings`.
+- Feed errors in the panel are in plain English (e.g. "Metra turned this key down (HTTP 401)").
 
 ## [0.1.0] - 2026-10-28
 

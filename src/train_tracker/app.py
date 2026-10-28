@@ -12,7 +12,7 @@ from pathlib import Path
 import aiohttp
 from aiohttp import web
 
-from . import __version__, narn
+from . import __version__, narn, settings
 from . import feeds as feedmod
 from .gtfs_static import load_static
 
@@ -42,6 +42,9 @@ class Hub:
         self.feeds = []
         self.vehicles = {}      # key -> vehicle json
         self.clients = set()
+        self.tasks = {}         # feed id -> poll task
+        self.statics = {}
+        self.session = None
 
     def feed_status(self):
         return [f.status() for f in self.feeds]
@@ -74,12 +77,27 @@ class Hub:
     def by_id(self, feed_id):
         return next((f for f in self.feeds if f.id == feed_id), None)
 
+    def start(self, feed):
+        if not feed.disabled:
+            self.tasks[feed.id] = asyncio.create_task(self.poll_loop(feed, self.session))
+
+    async def reload_feed(self, feed_id):
+        """Rebuild one feed from its config (e.g. after its API key changed) and restart its polling."""
+        cfg = next(c for c in self.config["feeds"] if c["id"] == feed_id)
+        task = self.tasks.pop(feed_id, None)
+        if task:
+            task.cancel()
+        new = feedmod.build(cfg, self.statics)
+        self.feeds = [new if f.id == feed_id else f for f in self.feeds]
+        await self.replace_feed(feed_id, [])
+        self.start(new)
+
     async def poll_loop(self, feed, session):
-        primary = self.by_id(feed.fallback_for) if feed.fallback_for else None
-        if primary:
-            await asyncio.sleep(primary.interval * 3)   # give the primary a chance first
+        if feed.fallback_for and self.by_id(feed.fallback_for):
+            await asyncio.sleep(self.by_id(feed.fallback_for).interval * 3)   # give the primary a chance first
         while True:
             now = time.time()
+            primary = self.by_id(feed.fallback_for) if feed.fallback_for else None
             if primary and (primary.healthy(now) or primary.disabled):
                 # primary is fine: the fallback stays quiet and shows nothing
                 if feed.count:
@@ -91,7 +109,7 @@ class Hub:
                     feed.last_ok, feed.last_error, feed.count = time.time(), None, len(vehicles)
                     await self.replace_feed(feed.id, vehicles)
                 except Exception as e:
-                    feed.last_error = f"{type(e).__name__}: {e}"[:300]
+                    feed.last_error = feedmod.describe_error(feed.agency, e)[:300]
                     log.warning("%s: %s", feed.id, feed.last_error)
                     # drop positions that have aged out while the feed is failing
                     keep = [k for k, v in self.vehicles.items()
@@ -172,7 +190,7 @@ async def on_startup(app):
     hub: Hub = app["hub"]
     data_dir: Path = app["data_dir"]
     session = aiohttp.ClientSession(headers={"User-Agent": f"train-tracker/{__version__}"})
-    app["session"] = session
+    app["session"] = hub.session = session
     data_dir.mkdir(parents=True, exist_ok=True)
     track = data_dir / narn.FILENAME
     for old in data_dir.glob("narn_passenger*.geojson"):
@@ -185,29 +203,30 @@ async def on_startup(app):
         except Exception as e:
             log.warning("NARN download failed (%s); map will show trains without track. "
                         "Retry with: train-tracker fetch-track", e)
-    statics = {}
     for cfg in hub.config["feeds"]:
         name = cfg.get("static")
-        if name and name not in statics:
-            statics[name] = await load_static(name, data_dir, session)
-    hub.feeds = [feedmod.build(cfg, statics) for cfg in hub.config["feeds"]]
+        if name and name not in hub.statics:
+            hub.statics[name] = await load_static(name, data_dir, session)
+    hub.feeds = [feedmod.build(cfg, hub.statics) for cfg in hub.config["feeds"]]
     for f in hub.feeds:
         if f.disabled:
             log.info("%s disabled: %s", f.id, f.disabled)
-    app["tasks"] = [asyncio.create_task(hub.poll_loop(f, session)) for f in hub.feeds if not f.disabled]
+        hub.start(f)
 
 
 async def on_cleanup(app):
-    for t in app.get("tasks", []):
+    for t in app["hub"].tasks.values():
         t.cancel()
     await app["session"].close()
 
 
-def make_app(config_path: Path = DEFAULT_CONFIG, data_dir: Path = DEFAULT_DATA):
+def make_app(config_path: Path = DEFAULT_CONFIG, data_dir: Path = DEFAULT_DATA, allow_remote_settings=False):
     app = web.Application()
     app["hub"] = Hub(json.loads(config_path.read_text()))
     app["data_dir"] = data_dir
     app["cell_locks"] = {}
+    app["allow_remote_settings"] = allow_remote_settings
+    settings.add_routes(app)
     app.router.add_get("/", index_handler)
     app.router.add_get("/ws", ws_handler)
     app.router.add_get("/api/vehicles", vehicles_handler)
@@ -228,6 +247,8 @@ def main(argv=None):
     ap.add_argument("--config", type=Path, default=DEFAULT_CONFIG, help="feed definitions (default: bundled feeds.json)")
     ap.add_argument("--data-dir", type=Path, default=DEFAULT_DATA,
                     help="downloads and .env (default: ~/.train-tracker)")
+    ap.add_argument("--allow-remote-settings", action="store_true",
+                    help="let other devices change API keys on the settings page (default: this computer only)")
     sub = ap.add_subparsers(dest="command")
     sub.add_parser("serve", help="run the server (default)")
     sub.add_parser("fetch-track", help="re-download NARN passenger track geometry")
@@ -241,7 +262,7 @@ def main(argv=None):
     load_dotenv(Path.cwd() / ".env")
     load_dotenv(args.data_dir / ".env")
     try:
-        web.run_app(make_app(args.config, args.data_dir), host=args.host, port=args.port)
+        web.run_app(make_app(args.config, args.data_dir, args.allow_remote_settings), host=args.host, port=args.port)
     except OSError as e:
         if e.errno != errno.EADDRINUSE:
             raise

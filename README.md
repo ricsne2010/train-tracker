@@ -50,6 +50,7 @@ FRA track map (~4 MB) and Amtrak's schedule into `~/.train-tracker/`.
 | `--port` | `7500` | |
 | `--host` | `127.0.0.1` | `0.0.0.0` to open it from a phone or another computer on your network |
 | `--data-dir` | `~/.train-tracker` | downloads and `.env` |
+| `--allow-remote-settings` | off | let other devices change API keys on the settings page |
 | `--config` | bundled `feeds.json` | your own feed list |
 | `fetch-track` | | re-download the NARN track map |
 | `--version` | | |
@@ -65,9 +66,18 @@ Amtrak, MBTA, LIRR, Metro-North and SEPTA need no key. Four agencies hand out fr
 | Metrolink (Los Angeles) | [GTFS-RT access page](https://metrolinktrains.com/about/gtfs/gtfs-rt-access/): enter your email | API key by email | `METROLINK_API_KEY` |
 | NJ Transit | [developer.njtransit.com/registration](https://developer.njtransit.com/registration/): register for RailData | username and password | `NJT_USERNAME`, `NJT_PASSWORD` |
 
-Copy [.env.example](.env.example) to `~/.train-tracker/.env` (or `.env` in the folder you start from), paste in the
-keys you have and restart `train-tracker`. Until then those agencies show in the panel as switched off, with the
-setting they need. Keys are personal: keep `.env` out of git (it is already in `.gitignore`).
+**Easiest:** open **API keys…** in the map panel (or <http://127.0.0.1:7500/settings.html>). Each agency has a
+card with its signup link; paste the key, press **Test** to check it with the agency, then **Save**. The feed
+starts straight away, no restart needed, and **Remove key** turns it off again. Saved keys are shown only by their
+last four characters.
+
+Keys are saved in `~/.train-tracker/.env` (readable only by you). You can also edit that file by hand using
+[.env.example](.env.example) as a template, then restart `train-tracker`. Keys are personal: keep `.env` out of git
+(it is already in `.gitignore`).
+
+Keys can only be changed from the computer running `train-tracker`. If you run it on another machine (say a
+Raspberry Pi with `--host 0.0.0.0`) and want to add keys from your phone, start it with `--allow-remote-settings`;
+anyone who can reach the page on your network can then change the keys.
 
 ## How it works
 

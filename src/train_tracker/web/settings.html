@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API Keys · US Train Tracker</title>
+<link rel="icon" href="img/moon-pi-logo-128.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="settings-page">
+<main>
+  <header class="settings-head">
+    <img src="img/moon-pi-logo-128.png" alt="Project Moon Pi">
+    <div>
+      <h1>API keys</h1>
+      <p>US Train Tracker · Designed and Created by Project Moon Pi</p>
+    </div>
+    <a class="back" href="./">← Back to the map</a>
+  </header>
+
+  <p class="intro">Amtrak, MBTA, LIRR, Metro-North and SEPTA work without a key. These agencies hand out
+    free developer keys: sign up, paste the key below, press <strong>Test</strong> to check it, then
+    <strong>Save</strong>. The feed starts straight away.</p>
+  <p id="locked" class="banner" hidden></p>
+
+  <div id="cards"><p class="muted">Loading…</p></div>
+
+  <p class="muted small" id="where"></p>
+</main>
+<script src="settings.js"></script>
+</body>
+</html>

@@ -388,7 +388,6 @@ function renderOwners() {
   }, 300);
 }
 map.on("moveend", renderOwners);
-map.on("idle", () => { if (!document.getElementById("owners").children.length) renderOwners(); });
 
 document.getElementById("layers-reset").addEventListener("click", () => {
   for (const g in lineOn) lineOn[g] = true;
@@ -405,7 +404,8 @@ const PASSENGER_NAMES = { A: "Amtrak", B: "Amtrak and commuter", C: "Commuter", 
 const OWNERS = { AMTK: "Amtrak", BNSF: "BNSF Railway", UP: "Union Pacific", CSXT: "CSX", NS: "Norfolk Southern",
   CN: "Canadian National", CPRS: "Canadian Pacific Kansas City", CPKC: "Canadian Pacific Kansas City",
   KCS: "Kansas City Southern", MNCW: "Metro-North", LI: "Long Island Rail Road", NJTR: "NJ Transit",
-  SEPA: "SEPTA", MBTA: "MBTA", METX: "Metra", SCAX: "Metrolink", PCJPB: "Caltrain" };
+  SEPA: "SEPTA", MBTA: "MBTA", METX: "Metra", SCAX: "Metrolink", PCJPB: "Caltrain", NJT: "NJ Transit",
+  FEC: "Florida East Coast Railway", SCRRA: "Metrolink", CSAO: "Conrail Shared Assets", NICD: "South Shore Line" };
 
 function showTrackPopup(lngLat, f) {
   const p = f.properties;
@@ -429,6 +429,7 @@ async function loadTrack() {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const fc = await r.json();
     map.getSource("track").setData(fc);
+    map.once("idle", renderOwners);   // list the railroads once the track has drawn
     net = new TrackNet(fc);
     for (const v of vehicles.values()) updateMotion(v, true);
     render();
@@ -569,7 +570,7 @@ function renderPanel() {
     const fallback = fs.find((f) => f.fallback_for && f.count);
     const state = fallback ? "warn" : feedState(primary);
     let note = "";
-    if (primary.disabled) note = primary.disabled;
+    if (primary.disabled) note = "needs an API key";
     else if (fallback) note = "primary feed down, showing Amtraker fallback";
     else if (primary.last_error) note = primary.last_error;
 
@@ -577,7 +578,8 @@ function renderPanel() {
     li.innerHTML = `<span class="dot ${state}" title="${state}"></span>
       <label><input type="checkbox" ${hidden.has(agency) || primary.disabled ? "" : "checked"} ${primary.disabled ? "disabled" : ""}>
       <span class="swatch" style="background:${AGENCY_COLORS[agency] || FALLBACK_COLOR}"></span>
-      <span>${esc(agency)}${note ? `<span class="note">${esc(note)}</span>` : ""}</span></label>
+      <span>${esc(agency)}${note ? `<span class="note">${esc(note)}${primary.disabled
+        ? ` · <a href="settings.html#${esc(primary.id)}">add key</a>` : ""}</span>` : ""}</span></label>
       <span class="n">${counts[agency] || 0}</span>`;
     li.querySelector("input").addEventListener("change", (e) => {
       e.target.checked ? hidden.delete(agency) : hidden.add(agency);
