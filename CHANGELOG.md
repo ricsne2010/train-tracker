@@ -4,7 +4,7 @@ All notable changes to this project are listed here. Versions follow [Semantic V
 
 ## [Unreleased]
 
-## [0.1.0] - 2026-10-27
+## [0.1.0] - 2026-10-28
 
 First release.
 
