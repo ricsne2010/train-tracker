@@ -10,6 +10,7 @@ All notable changes to this project are listed here. Versions follow [Semantic V
   from the list of railroads in view; remembered between visits.
 - Click any track for its type, owner, subdivision, yard and number of tracks.
 - Track geometry is sent gzip-compressed.
+- Metra key is also sent as a Bearer header; corrected the Metrolink signup link; API key steps in the README.
 
 ## [0.1.0] - 2026-10-28
 

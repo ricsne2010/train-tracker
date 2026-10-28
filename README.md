@@ -56,9 +56,18 @@ FRA track map (~4 MB) and Amtrak's schedule into `~/.train-tracker/`.
 
 ### API keys (optional)
 
-MBTA, LIRR, Metro-North, SEPTA and Amtrak need no key. For Metra, Caltrain, Metrolink and NJ Transit,
-copy [.env.example](.env.example) to `~/.train-tracker/.env` (or `.env` in the folder you run from) and fill in
-the keys you have. Feeds without a key are listed in the app as disabled.
+Amtrak, MBTA, LIRR, Metro-North and SEPTA need no key. Four agencies hand out free developer keys:
+
+| Agency | Where to sign up | What you get | Setting |
+|---|---|---|---|
+| Metra (Chicago) | [metra.com/developers](https://metra.com/developers): accept the licence, fill in the form | API token | `METRA_API_TOKEN` |
+| Caltrain (Bay Area) | [511.org/open-data/token](https://511.org/open-data/token): enter your email | 511 API key | `API_511_KEY` |
+| Metrolink (Los Angeles) | [GTFS-RT access page](https://metrolinktrains.com/about/gtfs/gtfs-rt-access/): enter your email | API key by email | `METROLINK_API_KEY` |
+| NJ Transit | [developer.njtransit.com/registration](https://developer.njtransit.com/registration/): register for RailData | username and password | `NJT_USERNAME`, `NJT_PASSWORD` |
+
+Copy [.env.example](.env.example) to `~/.train-tracker/.env` (or `.env` in the folder you start from), paste in the
+keys you have and restart `train-tracker`. Until then those agencies show in the panel as switched off, with the
+setting they need. Keys are personal: keep `.env` out of git (it is already in `.gitignore`).
 
 ## How it works
 

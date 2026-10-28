@@ -66,6 +66,7 @@
       "mode": "commuter",
       "url": "https://gtfspublic.metrarr.com/gtfs/public/positions",
       "params": {"api_token": "${METRA_API_TOKEN}"},
+      "headers": {"Authorization": "Bearer ${METRA_API_TOKEN}"},
       "interval_s": 30,
       "credit": "Metra"
     },
