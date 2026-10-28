@@ -33,6 +33,52 @@ def _query(offset):
         return json.load(r)
 
 
+# Freight and other active track, fetched lazily in CELL x CELL degree squares as the map zooms in.
+# NET codes: M main, I major industrial lead, O other (minor industrial), S passing siding, Y yard.
+# Left out: X out of service, A abandoned, R removed, T rail-trail, F ferry, Z transit-only/museum.
+CELL = 0.5
+OTHER_WHERE = "PASSNGR IS NULL AND NET IN ('M','I','O','S','Y')"
+
+
+def _slim(f):
+    p = f.get("properties") or {}
+    f.pop("id", None)
+    f["properties"] = {k: v for k, v in {
+        "i": p.get("OBJECTID"), "n": p.get("NET"), "o": p.get("RROWNER1"), "s": p.get("SUBDIV"),
+        "t": p.get("TRACKS") or 1, "y": p.get("YARDNAME"),
+    }.items() if v not in (None, "")}
+    return f
+
+
+async def fetch_cell(session, cx: int, cy: int) -> dict:
+    """Freight/other track intersecting one cell, as a GeoJSON FeatureCollection."""
+    x0, y0 = cx * CELL, cy * CELL
+    features, offset = [], 0
+    while True:
+        params = {
+            "where": OTHER_WHERE,
+            "geometry": f"{x0},{y0},{x0 + CELL},{y0 + CELL}",
+            "geometryType": "esriGeometryEnvelope", "inSR": 4326,
+            "spatialRel": "esriSpatialRelIntersects",
+            "outFields": "OBJECTID,NET,RROWNER1,SUBDIV,TRACKS,YARDNAME",
+            "orderByFields": "OBJECTID",
+            "resultOffset": offset, "resultRecordCount": PAGE,
+            "maxAllowableOffset": 0.00003, "geometryPrecision": 5,
+            "outSR": 4326, "f": "geojson",
+        }
+        async with session.get(LAYER, params=params) as r:
+            r.raise_for_status()
+            page = await r.json(content_type=None)
+        if "error" in page:
+            raise RuntimeError(f"NARN query failed: {page['error']}")
+        got = page.get("features", [])
+        features += [_slim(f) for f in got]
+        if len(got) < PAGE:
+            break
+        offset += PAGE
+    return {"type": "FeatureCollection", "features": features}
+
+
 def fetch(out: Path) -> Path:
     """Download the passenger network to `out`, replacing it only once the download is complete."""
     features, offset = [], 0

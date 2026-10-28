@@ -20,6 +20,7 @@ PKG = Path(__file__).resolve().parent
 WEB = PKG / "web"
 DEFAULT_CONFIG = PKG / "feeds.json"
 DEFAULT_DATA = Path.home() / ".train-tracker"
+CELL_MAX_AGE_S = 90 * 24 * 3600   # NARN is updated a few times a year
 MAX_SKEW_S = 120
 log = logging.getLogger("trains")
 
@@ -130,11 +131,41 @@ async def index_handler(request):
     return web.FileResponse(WEB / "index.html")
 
 
+def geojson_response(data: bytes, max_age: int):
+    resp = web.Response(body=data, content_type="application/geo+json",
+                        headers={"Cache-Control": f"max-age={max_age}"})
+    resp.enable_compression()
+    return resp
+
+
 async def track_handler(request):
     path = request.app["data_dir"] / narn.FILENAME
     if not path.exists():
         raise web.HTTPServiceUnavailable(text="track geometry is still downloading")
-    return web.FileResponse(path)
+    return geojson_response(path.read_bytes(), 3600)
+
+
+async def lines_handler(request):
+    """Freight and other track for one map cell, fetched from NARN once and cached on disk."""
+    cx, cy = int(request.match_info["cx"]), int(request.match_info["cy"])
+    if not (-360 <= cx < 0 and 0 <= cy < 180):   # western / northern hemisphere cells only
+        raise web.HTTPBadRequest(text="cell outside North America")
+    path = request.app["data_dir"] / "narn_cells" / f"{cx}_{cy}.geojson"
+    locks = request.app["cell_locks"]
+    async with locks.setdefault((cx, cy), asyncio.Lock()):
+        if not path.exists() or time.time() - path.stat().st_mtime > CELL_MAX_AGE_S:
+            try:
+                fc = await narn.fetch_cell(request.app["session"], cx, cy)
+            except Exception as e:
+                log.warning("NARN cell %d,%d: %s", cx, cy, e)
+                if not path.exists():
+                    raise web.HTTPBadGateway(text="could not load track for this area")
+            else:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                tmp = path.with_suffix(".part")
+                tmp.write_text(json.dumps(fc, separators=(",", ":")))
+                tmp.replace(path)
+    return geojson_response(path.read_bytes(), 86400)
 
 
 async def on_startup(app):
@@ -176,11 +207,13 @@ def make_app(config_path: Path = DEFAULT_CONFIG, data_dir: Path = DEFAULT_DATA):
     app = web.Application()
     app["hub"] = Hub(json.loads(config_path.read_text()))
     app["data_dir"] = data_dir
+    app["cell_locks"] = {}
     app.router.add_get("/", index_handler)
     app.router.add_get("/ws", ws_handler)
     app.router.add_get("/api/vehicles", vehicles_handler)
     app.router.add_get("/api/status", status_handler)
     app.router.add_get(f"/data/{narn.FILENAME}", track_handler)
+    app.router.add_get(r"/api/lines/{cx:-?\d+}/{cy:-?\d+}", lines_handler)
     app.router.add_static("/", WEB)
     app.on_startup.append(on_startup)
     app.on_cleanup.append(on_cleanup)

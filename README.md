@@ -14,6 +14,10 @@ Live Amtrak and commuter-rail positions on a map of US passenger track, in your 
   ballast, ties and rails, with double and triple track where NARN records it. Trains run on the
   right-hand track for their direction and glide along the track between updates at their reported speed.
   Car counts are live for SEPTA and typical for each service elsewhere.
+* **Freight and other track:** from city-level zoom, freight main lines, industrial track, sidings and yards
+  appear under the passenger network (fetched by area from NARN and cached in `~/.train-tracker/narn_cells/`).
+  Abandoned, removed and out-of-service lines and rail-trails are left out. Turn it off under **Map** in the panel.
+* **Click any track** for its type, owner, subdivision, yard name and number of tracks.
 
 ## Install and run
 
@@ -101,6 +105,7 @@ CI runs the tests and a build on Python 3.10–3.13 for every push and pull requ
 * Only Amtrak has static GTFS loaded, so commuter stops show raw stop IDs.
 * NARN stores one centreline per route, so the track a train is on is inferred (right-hand running), not known.
 * Car counts are typical for each service except SEPTA, whose feed lists the cars.
+* Freight track is shown, but not freight trains: railroads don't publish live freight positions.
 
 ## Credits
 

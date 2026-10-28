@@ -30,3 +30,4 @@ train_tracker = ["feeds.json", "web/*", "web/img/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+filterwarnings = ["ignore:It is recommended to use web.AppKey"]

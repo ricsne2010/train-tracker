@@ -4,6 +4,11 @@ All notable changes to this project are listed here. Versions follow [Semantic V
 
 ## [Unreleased]
 
+- Freight and other active track (main lines, industrial track, sidings, yards) from NARN, loaded by area
+  from city-level zoom and cached on disk; toggle under Map in the panel.
+- Click any track for its type, owner, subdivision, yard and number of tracks.
+- Track geometry is sent gzip-compressed.
+
 ## [0.1.0] - 2026-10-28
 
 First release.

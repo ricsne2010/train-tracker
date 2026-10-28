@@ -62,3 +62,32 @@ def test_version_flag(capsys):
     with pytest.raises(SystemExit):
         main(["--version"])
     assert __version__ in capsys.readouterr().out
+
+
+def test_lines_handler_fetches_once_then_serves_cache(tmp_path, monkeypatch):
+    from aiohttp import web
+    from aiohttp.test_utils import make_mocked_request
+    from train_tracker import narn
+    from train_tracker.app import lines_handler
+
+    calls = []
+
+    async def fake_fetch(session, cx, cy):
+        calls.append((cx, cy))
+        return {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {"n": "M"},
+                "geometry": {"type": "LineString", "coordinates": [[-104.9, 40.1], [-104.8, 40.2]]}}]}
+
+    monkeypatch.setattr(narn, "fetch_cell", fake_fetch)
+    app = web.Application()
+    app["data_dir"], app["cell_locks"], app["session"] = tmp_path, {}, None
+
+    def get(cx, cy):
+        req = make_mocked_request("GET", f"/api/lines/{cx}/{cy}", match_info={"cx": str(cx), "cy": str(cy)}, app=app)
+        return asyncio.run(lines_handler(req))
+
+    first, second = get(-210, 80), get(-210, 80)
+    assert calls == [(-210, 80)]
+    assert json.loads(second.body)["features"][0]["properties"]["n"] == "M"
+    assert (tmp_path / "narn_cells" / "-210_80.geojson").exists()
+    with pytest.raises(web.HTTPBadRequest):
+        get(10, 80)

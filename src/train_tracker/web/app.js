@@ -24,18 +24,20 @@ const SPRITE_Z = 9, CONSIST_Z = 15;
 const WIDTH_EXAG = 1.6;              // widths are drawn 1.6x real so rails and cars stay readable
 const CAR_WIDTH_M = 3.2, MIN_CAR_PX = 6;
 const MAX_GLIDE_S = 90;              // dead-reckon at most this long past the last fix
+const FREIGHT_Z = 9, CELL = 0.5;     // freight/other track: shown from this zoom, fetched in 0.5° squares
 
 const PALETTE = dark
   ? { edge: "#07090d", car: "#9aa3ad", glass: "#0b1220", hatch: "#00000055", halo: "#0f1218", text: "#e6e9ef",
-      ballast: "#3a3631", ties: "#51402f", rail: "#c2c9d2" }
+      ballast: "#3a3631", ties: "#51402f", rail: "#c2c9d2", freight: "#7d838d" }
   : { edge: "#1d2330", car: "#c9cfd6", glass: "#1b2430", hatch: "#00000040", halo: "#ffffff", text: "#1d2330",
-      ballast: "#c4bcae", ties: "#7a5c45", rail: "#59616b" };
+      ballast: "#c4bcae", ties: "#7a5c45", rail: "#59616b", freight: "#8d939c" };
 
 const vehicles = new Map();         // key -> vehicle from the server
 const motion = new Map();           // key -> client-side motion state (snap, heading, speed)
 let feeds = [];
 let net = null;                     // TrackNet, once the track file has loaded
 const hidden = new Set(JSON.parse(safeGet("hiddenAgencies") || "[]"));
+let showFreight = safeGet("showFreight") !== "0";
 
 function safeGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
 function safeSet(k, v) { try { localStorage.setItem(k, v); } catch { /* private mode */ } }
@@ -97,25 +99,10 @@ const PX_PER_M = (z) => 2 ** z / 61680;
 const metres = (m) => ["interpolate", ["exponential", 2], ["zoom"], 12, ["*", m, PX_PER_M(12)], 22, ["*", m, PX_PER_M(22)]];
 const nTracks = ["max", 1, ["min", 3, ["coalesce", ["get", "t"], 1]]];
 
-map.on("load", () => {
-  for (const color of new Set([...Object.values(AGENCY_COLORS), FALLBACK_COLOR])) {
-    map.addImage(`arrow-${color}`, arrowImage(color));
-    map.addImage(`sprite-${color}`, spriteImage(color), { pixelRatio: 2 });
-  }
-
-  map.addSource("track", { type: "geojson", data: emptyFC() });
-  // Zoomed out: one coloured line per route (blue Amtrak, green commuter).
+// Zoomed in: ballast bed, then ties and a pair of rails for each track, for one source.
+function addDetailLayers(src) {
   map.addLayer({
-    id: "track", type: "line", source: "track", maxzoom: 15.5,
-    paint: {
-      "line-color": TRACK_COLORS,
-      "line-width": ["interpolate", ["linear"], ["zoom"], 3, 1, 8, 2, 13, 3.5],
-      "line-opacity": ["interpolate", ["linear"], ["zoom"], 13.5, 0.85, 15.5, 0],
-    },
-  });
-  // Zoomed in: ballast bed, then ties and a pair of rails for each track.
-  map.addLayer({
-    id: "track-ballast", type: "line", source: "track", minzoom: 13.5,
+    id: `${src}-ballast`, type: "line", source: src, minzoom: 13.5,
     layout: { "line-cap": "round", "line-join": "round" },
     paint: {
       "line-color": PALETTE.ballast,
@@ -127,19 +114,60 @@ map.on("load", () => {
     const offset = metres(["*", WIDTH_EXAG * 4.3, ["-", i, ["/", ["-", nTracks, 1], 2]]]);
     const filter = [">", nTracks, i];
     map.addLayer({
-      id: `track-ties-${i}`, type: "line", source: "track", minzoom: 15.5, filter,
+      id: `${src}-ties-${i}`, type: "line", source: src, minzoom: 15.5, filter,
       layout: { "line-join": "round" },
       paint: { "line-color": PALETTE.ties, "line-width": metres(2.6 * WIDTH_EXAG), "line-offset": offset,
                "line-dasharray": [0.1, 0.14] },
     });
     map.addLayer({
-      id: `track-rails-${i}`, type: "line", source: "track", minzoom: 14.5, filter,
+      id: `${src}-rails-${i}`, type: "line", source: src, minzoom: 14.5, filter,
       layout: { "line-join": "round" },
       paint: { "line-color": PALETTE.rail, "line-offset": offset,
                "line-gap-width": metres(1.435 * WIDTH_EXAG),
                "line-width": ["interpolate", ["linear"], ["zoom"], 14.5, 0.6, 17, 1.2, 19, 2.2] },
     });
   }
+}
+
+map.on("load", () => {
+  for (const color of new Set([...Object.values(AGENCY_COLORS), FALLBACK_COLOR])) {
+    map.addImage(`arrow-${color}`, arrowImage(color));
+    map.addImage(`sprite-${color}`, spriteImage(color), { pixelRatio: 2 });
+  }
+
+  // Freight and other track (loaded by area as you zoom in) sits under the passenger lines.
+  map.addSource("freight", { type: "geojson", data: emptyFC() });
+  map.addLayer({
+    id: "freight", type: "line", source: "freight", minzoom: FREIGHT_Z - 0.5, maxzoom: 15.5,
+    filter: ["match", ["get", "n"], ["M", "I"], true, false],
+    paint: {
+      "line-color": PALETTE.freight,
+      "line-width": ["interpolate", ["linear"], ["zoom"], 9, 0.8, 13, 2],
+      "line-opacity": ["interpolate", ["linear"], ["zoom"], FREIGHT_Z - 0.5, 0, FREIGHT_Z, 0.9, 13.5, 0.9, 15.5, 0],
+    },
+  });
+  map.addLayer({
+    id: "freight-minor", type: "line", source: "freight", minzoom: 12, maxzoom: 15.5,
+    filter: ["match", ["get", "n"], ["M", "I"], false, true],
+    paint: {
+      "line-color": PALETTE.freight, "line-width": ["interpolate", ["linear"], ["zoom"], 12, 0.5, 14, 1.2],
+      "line-opacity": ["interpolate", ["linear"], ["zoom"], 12, 0, 12.5, 0.7, 13.5, 0.7, 15.5, 0],
+    },
+  });
+  addDetailLayers("freight");
+
+  map.addSource("track", { type: "geojson", data: emptyFC() });
+  // Zoomed out: one coloured line per route (blue Amtrak, green commuter).
+  map.addLayer({
+    id: "track", type: "line", source: "track", maxzoom: 15.5,
+    paint: {
+      "line-color": TRACK_COLORS,
+      "line-width": ["interpolate", ["linear"], ["zoom"], 3, 1, 8, 2, 13, 3.5],
+      "line-opacity": ["interpolate", ["linear"], ["zoom"], 13.5, 0.85, 15.5, 0],
+    },
+  });
+  addDetailLayers("track");
+  setFreightVisible(showFreight);
 
   // Full trains (zoomed in), drawn as polygons that follow the track.
   map.addSource("consists", { type: "geojson", data: emptyFC() });
@@ -195,15 +223,112 @@ map.on("load", () => {
     paint: { "text-color": PALETTE.text, "text-halo-color": PALETTE.halo, "text-halo-width": 1.5 },
   });
 
-  for (const id of ["trains-dot", "trains-arrow", "trains-sprite", "trains-dot-mid", "consist-fill"]) {
-    map.on("click", id, (e) => showPopup(e.features[0].properties.key));
+  for (const id of TRAIN_LAYERS) {
     map.on("mouseenter", id, () => (map.getCanvas().style.cursor = "pointer"));
     map.on("mouseleave", id, () => (map.getCanvas().style.cursor = ""));
   }
+  map.on("click", (e) => {
+    const pad = 6, box = [[e.point.x - pad, e.point.y - pad], [e.point.x + pad, e.point.y + pad]];
+    const train = map.queryRenderedFeatures(box, { layers: TRAIN_LAYERS })[0];
+    if (train) return showPopup(train.properties.key);
+    const lines = map.queryRenderedFeatures(box, { layers: TRACK_LAYERS.filter((id) => map.getLayer(id)) });
+    if (lines.length) showTrackPopup(e.lngLat, lines[0]);
+  });
 
   loadTrack();
   render();
 });
+
+const TRAIN_LAYERS = ["trains-dot", "trains-arrow", "trains-sprite", "trains-dot-mid", "consist-fill"];
+const TRACK_LAYERS = ["track", "track-ballast", "freight", "freight-minor", "freight-ballast"];
+
+// ---------- freight and other track, fetched by area ----------
+const cells = new Map();       // "cx,cy" -> features | "loading" | failure time
+let freightTimer = null;
+
+function setFreightVisible(on) {
+  for (const layer of map.getStyle().layers) {
+    if (layer.source === "freight") map.setLayoutProperty(layer.id, "visibility", on ? "visible" : "none");
+  }
+  if (on) loadFreight();
+}
+
+async function loadFreight() {
+  if (!showFreight || map.getZoom() < FREIGHT_Z - 0.5) return;
+  const b = map.getBounds(), c = map.getCenter();
+  const want = [];
+  for (let cx = Math.floor(b.getWest() / CELL); cx <= Math.floor(b.getEast() / CELL); cx++) {
+    for (let cy = Math.floor(b.getSouth() / CELL); cy <= Math.floor(b.getNorth() / CELL); cy++) {
+      const k = `${cx},${cy}`, st = cells.get(k);
+      if (st === undefined || (typeof st === "number" && Date.now() - st > 60000)) want.push([cx, cy]);
+    }
+  }
+  if (want.length > 80) return;
+  // nearest squares first, four at a time
+  want.sort((a, z) => Math.hypot((a[0] + 0.5) * CELL - c.lng, (a[1] + 0.5) * CELL - c.lat)
+                    - Math.hypot((z[0] + 0.5) * CELL - c.lng, (z[1] + 0.5) * CELL - c.lat));
+  for (const [cx, cy] of want) cells.set(`${cx},${cy}`, "loading");
+  const queue = [...want];
+  const worker = async () => {
+    for (let job; (job = queue.shift()); ) {
+      const [cx, cy] = job, k = `${cx},${cy}`;
+      try {
+        const r = await fetch(`api/lines/${cx}/${cy}`);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        cells.set(k, (await r.json()).features);
+        rebuildFreight();
+      } catch (e) {
+        console.warn("freight lines", k, e);
+        cells.set(k, Date.now());
+      }
+    }
+  };
+  await Promise.all([worker(), worker(), worker(), worker()]);
+}
+
+function rebuildFreight() {
+  clearTimeout(freightTimer);
+  freightTimer = setTimeout(() => {
+    const seen = new Set(), features = [];
+    for (const fs of cells.values()) {
+      if (!Array.isArray(fs)) continue;
+      for (const f of fs) {
+        const id = f.properties.i;
+        if (id != null && seen.has(id)) continue;   // a line crossing two squares comes back twice
+        seen.add(id);
+        features.push(f);
+      }
+    }
+    map.getSource("freight").setData({ type: "FeatureCollection", features });
+  }, 150);
+}
+
+map.on("moveend", loadFreight);
+
+// ---------- track popup ----------
+const NET_NAMES = { M: "Main line", I: "Major industrial lead", O: "Industrial track", S: "Passing siding", Y: "Yard track" };
+const PASSENGER_NAMES = { A: "Amtrak", B: "Amtrak and commuter", C: "Commuter", E: "High-speed rail and commuter",
+  I: "High-speed rail", R: "Rapid transit", T: "Tourist or museum", D: "Alaska Railroad" };
+const OWNERS = { AMTK: "Amtrak", BNSF: "BNSF Railway", UP: "Union Pacific", CSXT: "CSX", NS: "Norfolk Southern",
+  CN: "Canadian National", CPRS: "Canadian Pacific Kansas City", CPKC: "Canadian Pacific Kansas City",
+  KCS: "Kansas City Southern", MNCW: "Metro-North", LI: "Long Island Rail Road", NJTR: "NJ Transit",
+  SEPA: "SEPTA", MBTA: "MBTA", METX: "Metra", SCAX: "Metrolink", PCJPB: "Caltrain" };
+
+function showTrackPopup(lngLat, f) {
+  const p = f.properties;
+  const kind = f.source === "track" ? `Passenger: ${PASSENGER_NAMES[p.p] || p.p}` : NET_NAMES[p.n] || "Track";
+  const rows = [
+    ["Owner", p.o ? (OWNERS[p.o] ? `${OWNERS[p.o]} (${p.o})` : p.o) : null],
+    ["Subdivision", p.s], ["Yard", p.y], ["Tracks", p.t > 1 ? p.t : null],
+  ].filter(([, x]) => x);
+  if (popup) popup.remove();
+  openKey = null;
+  popup = new maplibregl.Popup({ closeButton: true, offset: 6 }).setLngLat(lngLat)
+    .setHTML(`<div class="pop"><h3>${esc(kind)}</h3>
+      <dl>${rows.map(([k, x]) => `<dt>${k}</dt><dd>${esc(String(x))}</dd>`).join("")}</dl>
+      <p class="fine">FRA North American Rail Network</p></div>`)
+    .addTo(map);
+}
 
 async function loadTrack() {
   try {
@@ -495,3 +620,11 @@ connect();
 
 document.getElementById("toggle").addEventListener("click", () =>
   document.getElementById("panel").classList.toggle("collapsed"));
+
+const freightToggle = document.getElementById("freight-toggle");
+freightToggle.checked = showFreight;
+freightToggle.addEventListener("change", () => {
+  showFreight = freightToggle.checked;
+  safeSet("showFreight", showFreight ? "1" : "0");
+  if (map.getSource("freight")) setFreightVisible(showFreight);
+});
