@@ -1,0 +1,11 @@
+# Keeps the GitHub Actions used in .github/workflows current: Dependabot opens a pull request
+# when an action has a new version (e.g. when GitHub retires the Node.js runtime an old one uses).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
