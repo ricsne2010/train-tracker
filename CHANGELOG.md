@@ -4,6 +4,9 @@ All notable changes to this project are listed here. Versions follow [Semantic V
 
 ## [Unreleased]
 
+- A "More" prompt with a bobbing arrow at the bottom of the side panel and the API keys page while there's
+  more to read below; click it to scroll down.
+
 ## [0.2.0] - 2026-10-28
 
 - Freight and other active track (main lines, industrial track, sidings, yards) from NARN, loaded by area

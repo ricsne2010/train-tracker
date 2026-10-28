@@ -666,6 +666,8 @@ function esc(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+addMoreHint(document.getElementById("panel"));
+
 // ---------- splash ----------
 // Shown until the map, track and trains are in and the logo's lens flare has played (or on a click).
 const splashWaiting = new Set(["map", "track", "trains", "intro"]);
