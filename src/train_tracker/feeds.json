@@ -1,0 +1,104 @@
+{
+  "_comment": "Feed definitions. ${NAME} is replaced from the environment or .env; a feed whose key is missing is skipped. Speeds in GTFS-RT are m/s.",
+  "stale_after_s": 600,
+  "feeds": [
+    {
+      "id": "amtrak",
+      "agency": "Amtrak",
+      "kind": "gtfsrt",
+      "mode": "intercity",
+      "url": "https://asm-backend.transitdocs.com/gtfs/amtrak",
+      "interval_s": 20,
+      "static": "amtrak",
+      "credit": "Amtrak positions via Transitdocs"
+    },
+    {
+      "id": "amtraker",
+      "agency": "Amtrak",
+      "kind": "amtraker",
+      "mode": "intercity",
+      "url": "https://api-v3.amtraker.com/v3/trains",
+      "interval_s": 60,
+      "fallback_for": "amtrak",
+      "credit": "Amtraker API (ODC-By 1.0), https://amtraker.com"
+    },
+    {
+      "id": "mbta",
+      "agency": "MBTA Commuter Rail",
+      "kind": "gtfsrt",
+      "mode": "commuter",
+      "url": "https://cdn.mbta.com/realtime/VehiclePositions.pb",
+      "route_prefix": "CR-",
+      "interval_s": 20,
+      "credit": "MBTA"
+    },
+    {
+      "id": "lirr",
+      "agency": "LIRR",
+      "kind": "gtfsrt",
+      "mode": "commuter",
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/lirr%2Fgtfs-lirr",
+      "interval_s": 20,
+      "credit": "MTA"
+    },
+    {
+      "id": "mnr",
+      "agency": "Metro-North",
+      "kind": "gtfsrt",
+      "mode": "commuter",
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/mnr%2Fgtfs-mnr",
+      "interval_s": 20,
+      "credit": "MTA"
+    },
+    {
+      "id": "septa",
+      "agency": "SEPTA Regional Rail",
+      "kind": "gtfsrt",
+      "mode": "commuter",
+      "url": "https://www3.septa.org/gtfsrt/septarail-pa-us/Vehicle/rtVehiclePosition.pb",
+      "interval_s": 30,
+      "credit": "SEPTA"
+    },
+    {
+      "id": "metra",
+      "agency": "Metra",
+      "kind": "gtfsrt",
+      "mode": "commuter",
+      "url": "https://gtfspublic.metrarr.com/gtfs/public/positions",
+      "params": {"api_token": "${METRA_API_TOKEN}"},
+      "interval_s": 30,
+      "credit": "Metra"
+    },
+    {
+      "id": "caltrain",
+      "agency": "Caltrain",
+      "kind": "gtfsrt",
+      "mode": "commuter",
+      "url": "https://api.511.org/transit/vehiclepositions",
+      "params": {"api_key": "${API_511_KEY}", "agency": "CT"},
+      "interval_s": 60,
+      "credit": "511.org"
+    },
+    {
+      "id": "metrolink",
+      "agency": "Metrolink",
+      "kind": "gtfsrt",
+      "mode": "commuter",
+      "url": "https://metrolink-gtfsrt.gbsdigital.us/feed/gtfsrt-vehicles",
+      "headers": {"x-api-key": "${METROLINK_API_KEY}"},
+      "interval_s": 30,
+      "credit": "Metrolink"
+    },
+    {
+      "id": "njt",
+      "agency": "NJ Transit Rail",
+      "kind": "njt",
+      "mode": "commuter",
+      "url": "https://raildata.njtransit.com/api/GTFSRT",
+      "username": "${NJT_USERNAME}",
+      "password": "${NJT_PASSWORD}",
+      "interval_s": 30,
+      "credit": "NJ Transit"
+    }
+  ]
+}

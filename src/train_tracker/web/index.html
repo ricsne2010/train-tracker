@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>US Train Tracker</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="map"></div>
+<aside id="panel">
+  <header>
+    <h1>US Train Tracker</h1>
+    <span id="conn" class="conn off" title="Live connection">offline</span>
+  </header>
+  <p id="summary">Connecting…</p>
+  <input id="search" type="search" placeholder="Train number or route" autocomplete="off">
+  <ul id="results"></ul>
+  <h2>Agencies</h2>
+  <ul id="agencies"></ul>
+  <details id="credits">
+    <summary>Data sources</summary>
+    <ul id="creditlist"></ul>
+    <p>Track: FRA North American Rail Network (public domain). Basemap © OpenFreeMap, © OpenStreetMap contributors.</p>
+  </details>
+  <button id="toggle" aria-label="Toggle panel">☰</button>
+</aside>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
