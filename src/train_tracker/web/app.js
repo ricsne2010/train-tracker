@@ -677,7 +677,7 @@ function hideSplash() {
   const s = document.getElementById("splash");
   if (!s || s.classList.contains("gone")) return;
   s.classList.add("gone");
-  setTimeout(() => s.remove(), 700);
+  setTimeout(() => { s.remove(); SplashFX.stop(); }, 700);
 }
 map.on("load", () => splashReady("map"));
 SplashFX.play(document.getElementById("splash-logo"), "img/moon-pi-logo")

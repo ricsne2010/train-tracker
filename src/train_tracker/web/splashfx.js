@@ -7,6 +7,8 @@
 //   - a band of light sweeps across the white rings and the lettering, like light on polished metal
 // Where everything is comes from <logo>.fx.json, .fx-sheen.png and .fx-flame.png beside the logo, made by
 // tools/make_splash_fx.py. Everything is drawn once up front; each frame only adds those pieces onto the badge.
+// Where the browser allows, it runs in a worker of its own (this same file), so the map loading alongside it
+// can't make it stutter.
 "use strict";
 
 const SplashFX = (() => {
@@ -22,18 +24,17 @@ const SplashFX = (() => {
   const bump = (t, [a, b]) => (a < t && t < b ? Math.sin(Math.PI * (t - a) / (b - a)) : 0);
 
   function canvas(w, h, draw) {
-    const c = document.createElement("canvas");
-    c.width = Math.max(1, Math.ceil(w)); c.height = Math.max(1, Math.ceil(h));
+    w = Math.max(1, Math.ceil(w)); h = Math.max(1, Math.ceil(h));
+    const c = typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(w, h) : document.createElement("canvas");
+    c.width = w; c.height = h;
     draw(c.getContext("2d"), c.width, c.height);
     return c;
   }
 
-  function load(src) {
-    return new Promise((ok, fail) => {
-      const im = new Image();
-      im.onload = () => ok(im); im.onerror = () => fail(new Error(`couldn't load ${src}`));
-      im.src = src;
-    });
+  async function load(src) {
+    const r = await fetch(src);
+    if (!r.ok) throw new Error(`couldn't load ${src}`);
+    return createImageBitmap(await r.blob());
   }
 
   // A soft round glow, for adding onto the picture.
@@ -165,6 +166,17 @@ const SplashFX = (() => {
       g.restore();
     }
 
+    // Draw every piece once, then the opening frame over it, so nothing is drawn for the first time mid-flare.
+    warm(g, pad) {
+      for (const t of [1, 2.4, 3.1]) this.draw(g, t, pad);
+      g.globalCompositeOperation = "lighter";
+      for (const img of [...this.ghosts.map(([gh]) => gh), this.core, this.halo, this.streak, this.burst, this.jetGlow,
+                         ...Object.values(this.sparkles)]) {
+        for (const scale of [0.6, 1, 1.2]) this.add(g, img, this.fx.centre, 0.02, scale, 0.3);
+      }
+      this.draw(g, 0, pad);
+    }
+
     draw(g, t, pad) {
       const fx = this.fx;
       g.globalCompositeOperation = "source-over"; g.globalAlpha = 1;
@@ -225,16 +237,15 @@ const SplashFX = (() => {
     }
   }
 
-  // Draw the logo into `target` and play the light show on it. Resolves once the flare and sheen are done
-  // (the flames and stars carry on until the canvas leaves the page). Without the effect files, or with
-  // reduced motion asked for, the logo is just shown still.
-  async function play(target, base) {
+  // Draw the logo onto canvas `target` and play the light show on it, calling done() once the flare and sheen
+  // are over (the flames and stars carry on until stop()). Without the effect files the logo is shown still.
+  async function run(target, base, still, done) {
     const g = target.getContext("2d");
     const logo = await load(`${base}.png`);
     const pad = Math.round(PAD * logo.width);
     target.width = logo.width + 2 * pad; target.height = logo.height + 2 * pad;
     g.drawImage(logo, pad, pad);
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (still) return done();
     let show;
     try {
       const [fx, sheen, flame] = await Promise.all([
@@ -242,20 +253,56 @@ const SplashFX = (() => {
       show = new Show(logo, fx, sheen, flame);
     } catch (e) {
       console.warn("splash effect off:", e.message);
-      return;
+      return done();
     }
-    return new Promise((done) => {
-      const start = performance.now();
-      const frame = (now) => {
-        if (!target.isConnected) return done();
-        const t = (now - start) / 1000;
-        show.draw(g, t, pad);
-        if (t > SHEEN[1] + 0.2) done();
-        requestAnimationFrame(frame);
-      };
-      requestAnimationFrame(frame);
-    });
+    const next = self.requestAnimationFrame
+      ? (f) => requestAnimationFrame(f) : (f) => setTimeout(() => f(performance.now()), 16);
+    show.warm(g, pad);                               // pay each piece's one-off first-draw cost before the clock starts
+    const start = performance.now();
+    let finished = false;
+    const frame = (now) => {
+      if (stopped) return;
+      const t = (now - start) / 1000;
+      show.draw(g, t, pad);
+      if (!finished && t > SHEEN[1] + 0.2) { finished = true; done(); }
+      next(frame);
+    };
+    next(frame);
   }
 
-  return { play };
+  let stopped = false, worker = null;
+  const here = typeof document !== "undefined" && document.currentScript && document.currentScript.src;
+
+  // Play on the page's canvas; resolves when the flare and sheen are over. Reduced motion: the logo, still.
+  function play(target, base) {
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const url = new URL(base, location.href).href;
+    if (!still && here && target.transferControlToOffscreen && typeof Worker !== "undefined") {
+      try {
+        worker = new Worker(here);
+        const off = target.transferControlToOffscreen();
+        return new Promise((done) => {
+          worker.onmessage = () => done();
+          worker.onerror = (e) => { console.warn("splash worker:", e.message); done(); };
+          worker.postMessage({ canvas: off, base: url }, [off]);
+        });
+      } catch (e) {
+        console.warn("splash worker:", e.message);   // fall back to drawing here
+      }
+    }
+    return new Promise((done, fail) => run(target, url, still, done).catch(fail));
+  }
+
+  function stop() {
+    stopped = true;
+    if (worker) worker.terminate();
+  }
+
+  // Inside the worker: wait for the canvas, then run.
+  if (typeof document === "undefined") {
+    self.onmessage = (e) => run(e.data.canvas, e.data.base, false, () => self.postMessage("done"))
+      .catch((err) => { console.warn("splash:", err.message); self.postMessage("done"); });
+  }
+
+  return { play, stop };
 })();
