@@ -4,6 +4,8 @@ All notable changes to this project are listed here. Versions follow [Semantic V
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-28
+
 - Freight and other active track (main lines, industrial track, sidings, yards) from NARN, loaded by area
   from city-level zoom and cached on disk.
 - Map layers filters: turn each kind of passenger or freight line on or off, and hide individual railroads
