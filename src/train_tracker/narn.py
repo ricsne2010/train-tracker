@@ -12,7 +12,7 @@ from pathlib import Path
 
 LAYER = ("https://services.arcgis.com/xOi1kZaI0eWDREZv/arcgis/rest/services/"
          "NTAD_North_American_Rail_Network_Lines/FeatureServer/0/query")
-FILENAME = "narn_passenger.geojson"
+FILENAME = "narn_passenger_v2.geojson"   # v2 adds track counts
 PAGE = 2000
 log = logging.getLogger(__name__)
 
@@ -20,11 +20,11 @@ log = logging.getLogger(__name__)
 def _query(offset):
     q = urllib.parse.urlencode({
         "where": "PASSNGR IS NOT NULL AND COUNTRY = 'US'",
-        "outFields": "PASSNGR,RROWNER1,SUBDIV",
+        "outFields": "PASSNGR,RROWNER1,SUBDIV,TRACKS",
         "orderByFields": "OBJECTID",
         "resultOffset": offset,
         "resultRecordCount": PAGE,
-        "maxAllowableOffset": 0.0002,   # ~20 m simplification
+        "maxAllowableOffset": 0.00003,  # ~3 m simplification: curves stay on the rails when zoomed in
         "geometryPrecision": 5,
         "outSR": 4326,
         "f": "geojson",
@@ -41,7 +41,8 @@ def fetch(out: Path) -> Path:
         for f in got:
             f.pop("id", None)
             p = f["properties"]
-            f["properties"] = {"p": p.get("PASSNGR"), "o": p.get("RROWNER1"), "s": p.get("SUBDIV")}
+            f["properties"] = {"p": p.get("PASSNGR"), "o": p.get("RROWNER1"), "s": p.get("SUBDIV"),
+                               "t": p.get("TRACKS") or 1}
         features += got
         log.info("NARN: %d segments", len(features))
         if len(got) < PAGE:

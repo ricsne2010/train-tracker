@@ -9,6 +9,7 @@ description = "Live US passenger-train map: Amtrak and commuter rail over FRA NA
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
+authors = [{ name = "Project Moon Pi" }]
 dependencies = [
     "aiohttp>=3.9",
     "gtfs-realtime-bindings>=1.0",
@@ -25,7 +26,7 @@ train-tracker = "train_tracker.app:main"
 version = { attr = "train_tracker.__version__" }
 
 [tool.setuptools.package-data]
-train_tracker = ["feeds.json", "web/*"]
+train_tracker = ["feeds.json", "web/*", "web/img/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -103,7 +103,7 @@ class GtfsRtFeed(Feed):
         trip_id = vp.trip.trip_id or None
         route_id = vp.trip.route_id or None
         train = vp.vehicle.label or None
-        route = headsign = color = None
+        route = headsign = color = cars = None
         stop = vp.stop_id or None
 
         if self.id == "amtrak":
@@ -116,6 +116,16 @@ class GtfsRtFeed(Feed):
             tail = trip_id.rsplit("-", 1)[-1]
             if tail.isdigit():
                 train = tail
+        elif self.id == "septa":
+            # SEPTA labels list the car numbers ("333,332,135,136"); trip ids start with line + train ("WAR416_")
+            if train and "," in train:
+                cars = len(train.split(","))
+            m = re.match(r"[A-Z]+(\d+)_", trip_id or "")
+            train = m.group(1) if m else None
+        elif self.id == "lirr":
+            # LIRR labels are car numbers; trip ids carry the train number ("GO202_26_718_2")
+            m = re.match(r"GO\d+_\d+_(\d+)", trip_id or "")
+            train = m.group(1) if m else None
 
         if self.static:
             t = self.static.trips.get(trip_id or "")
@@ -138,7 +148,7 @@ class GtfsRtFeed(Feed):
             bearing=pos.bearing if pos.HasField("bearing") else None,
             speed_mph=round(pos.speed * MPS_TO_MPH, 1) if pos.HasField("speed") else None,
             status=STATUS.get(vp.current_status) if vp.HasField("current_status") else None,
-            stop=stop, color=color,
+            stop=stop, color=color, cars=cars,
         )
 
 

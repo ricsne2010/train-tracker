@@ -22,6 +22,7 @@ class Vehicle:
     status: Optional[str] = None      # STOPPED_AT | IN_TRANSIT_TO | INCOMING_AT
     stop: Optional[str] = None        # next / current stop name or code
     color: Optional[str] = None       # route colour hex without '#', if known
+    cars: Optional[int] = None        # number of cars, when the feed reports the consist
 
     def to_json(self):
         return {k: v for k, v in asdict(self).items() if v is not None}

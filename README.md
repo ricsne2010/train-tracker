@@ -1,6 +1,19 @@
+<p align="center"><img src="src/train_tracker/web/img/moon-pi-logo.png" alt="Project Moon Pi" width="140"></p>
+
 # US Train Tracker
 
+*A Project Moon Pi project.*
+
 Live Amtrak and commuter-rail positions on a map of US passenger track, in your browser.
+
+## On the map
+
+* **Zoomed out:** coloured arrows (or dots when a train's direction isn't known yet) across the country.
+* **Middle zooms:** a small top-down train (locomotive and cars) pointing the way it's going.
+* **Zoomed in:** each train drawn to scale, car by car, bending with the real track; the track shows
+  ballast, ties and rails, with double and triple track where NARN records it. Trains run on the
+  right-hand track for their direction and glide along the track between updates at their reported speed.
+  Car counts are live for SEPTA and typical for each service elsewhere.
 
 ## Install and run
 
@@ -85,8 +98,9 @@ CI runs the tests and a build on Python 3.10–3.13 for every push and pull requ
 
 * NJ Transit endpoints (`/api/GTFSRT/getToken`, `/getVehiclePositions`) follow the RailData API pattern but
   are untested with real credentials; Metra, Caltrain and Metrolink are also untested without keys.
-* Only Amtrak has static GTFS loaded, so commuter stops show raw stop IDs and LIRR markers show car numbers.
-* Trains jump between polls (no interpolation along the track yet).
+* Only Amtrak has static GTFS loaded, so commuter stops show raw stop IDs.
+* NARN stores one centreline per route, so the track a train is on is inferred (right-hand running), not known.
+* Car counts are typical for each service except SEPTA, whose feed lists the cars.
 
 ## Data and credits
 
@@ -99,3 +113,4 @@ CI runs the tests and a build on Python 3.10–3.13 for every push and pull requ
 ## License
 
 MIT; see [LICENSE](LICENSE). Data sources keep their own terms (see above).
+The Project Moon Pi name and logo belong to Project Moon Pi and are not covered by the MIT license.

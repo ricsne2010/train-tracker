@@ -93,3 +93,27 @@ def test_amtraker_keeps_active_amtrak_only():
     [v] = f.parse(data)
     assert (v.train, v.route, v.bearing, v.speed_mph, v.color) == ("1", "Sunset Limited", 315, 78.4, "c60b31")
     assert v.timestamp == 1793167539
+
+
+def test_septa_train_number_and_car_count():
+    f = GtfsRtFeed(cfg(id="septa"), {})
+    msg = gtfs_realtime_pb2.FeedMessage()
+    msg.header.gtfs_realtime_version = "2.0"
+    v = msg.entity.add(id="e").vehicle
+    v.vehicle.id = v.vehicle.label = "333,332,135,136"
+    v.trip.trip_id = "WAR416_20261019_SID189798"
+    v.position.latitude, v.position.longitude = 40.0, -75.1
+    [out] = f.parse(msg.SerializeToString())
+    assert (out.train, out.cars) == ("416", 4)
+
+
+def test_lirr_train_number_from_trip_id():
+    f = GtfsRtFeed(cfg(id="lirr"), {})
+    msg = gtfs_realtime_pb2.FeedMessage()
+    msg.header.gtfs_realtime_version = "2.0"
+    v = msg.entity.add(id="e").vehicle
+    v.vehicle.id, v.vehicle.label = "7544_718", "7544"
+    v.trip.trip_id = "GO202_26_718_2"
+    v.position.latitude, v.position.longitude = 40.7, -73.8
+    [out] = f.parse(msg.SerializeToString())
+    assert out.train == "718"

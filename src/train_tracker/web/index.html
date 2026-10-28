@@ -4,13 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>US Train Tracker</title>
+<link rel="icon" href="img/moon-pi-logo-128.png">
+<link rel="apple-touch-icon" href="img/moon-pi-logo-128.png">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div id="splash" role="status" aria-label="Loading">
+  <img src="img/moon-pi-logo.png" alt="Project Moon Pi">
+  <h1>US Train Tracker</h1>
+  <p>A Project Moon Pi project</p>
+  <span class="loading">Loading track and live trains…</span>
+</div>
 <div id="map"></div>
 <aside id="panel">
   <header>
+    <img class="brand" src="img/moon-pi-logo-128.png" alt="Project Moon Pi" title="A Project Moon Pi project">
     <h1>US Train Tracker</h1>
     <span id="conn" class="conn off" title="Live connection">offline</span>
   </header>
@@ -20,13 +29,17 @@
   <h2>Agencies</h2>
   <ul id="agencies"></ul>
   <details id="credits">
-    <summary>Data sources</summary>
+    <summary>About and data sources</summary>
+    <div class="about"><img src="img/moon-pi-logo-128.png" alt=""><p><strong>US Train Tracker</strong><br>A Project Moon Pi project</p></div>
     <ul id="creditlist"></ul>
     <p>Track: FRA North American Rail Network (public domain). Basemap © OpenFreeMap, © OpenStreetMap contributors.</p>
+    <p>Zoomed in, train length and cars are typical for each service, not live consist data.</p>
+    <p>The Project Moon Pi name and logo belong to Project Moon Pi.</p>
   </details>
   <button id="toggle" aria-label="Toggle panel">☰</button>
 </aside>
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="track.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
