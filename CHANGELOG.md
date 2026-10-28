@@ -16,4 +16,5 @@ First release.
 - One normalized vehicle model, cached on the server and pushed to browsers over WebSocket.
 - MapLibre map over FRA NARN passenger track, downloaded on first start.
 - Agency filters, feed-health lights, search by train number or route, light and dark themes.
+- Trains that have not departed yet (future-stamped positions at their origin) are hidden.
 - `train-tracker` command: `--port` (default 7500), `--host`, `--data-dir`, `--config`, `fetch-track`.

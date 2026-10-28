@@ -20,6 +20,7 @@ PKG = Path(__file__).resolve().parent
 WEB = PKG / "web"
 DEFAULT_CONFIG = PKG / "feeds.json"
 DEFAULT_DATA = Path.home() / ".train-tracker"
+MAX_SKEW_S = 120
 log = logging.getLogger("trains")
 
 
@@ -57,7 +58,9 @@ class Hub:
     async def replace_feed(self, feed_id, vehicles):
         """Swap one feed's vehicles for a fresh list and broadcast what changed."""
         now = time.time()
-        fresh = {v.key: v.to_json() for v in vehicles if now - v.timestamp < self.stale_after}
+        # Future timestamps are trains that have not departed yet (Transitdocs parks them at their
+        # origin with the scheduled time); allow a little clock skew.
+        fresh = {v.key: v.to_json() for v in vehicles if -MAX_SKEW_S <= now - v.timestamp < self.stale_after}
         old = {k for k, v in self.vehicles.items() if v["feed"] == feed_id}
         remove = sorted(old - fresh.keys())
         upsert = [v for k, v in fresh.items() if self.vehicles.get(k) != v]

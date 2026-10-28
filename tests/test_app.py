@@ -42,6 +42,12 @@ def test_replace_feed_leaves_other_feeds_and_drops_stale():
     assert set(hub.vehicles) == {"g:1", "f:1"}
 
 
+def test_replace_feed_drops_trains_not_yet_departed():
+    hub = Recorder()
+    asyncio.run(hub.replace_feed("f", [vehicle("f:skew", age=-60), vehicle("f:later", age=-3600)]))
+    assert set(hub.vehicles) == {"f:skew"}
+
+
 def test_bundled_config_is_valid():
     cfg = json.loads(DEFAULT_CONFIG.read_text())
     ids = [f["id"] for f in cfg["feeds"]]
