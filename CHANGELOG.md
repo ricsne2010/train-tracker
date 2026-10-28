@@ -4,6 +4,8 @@ All notable changes to this project are listed here. Versions follow [Semantic V
 
 ## [Unreleased]
 
+- The map opens with the lower 48 fitted beside the panel (or above it on a phone) at any window size, and
+  stays fitted while the window settles or is resized, until you move the map.
 - A "More" prompt with a bobbing arrow at the bottom of the side panel and the API keys page while there's
   more to read below; click it to scroll down.
 

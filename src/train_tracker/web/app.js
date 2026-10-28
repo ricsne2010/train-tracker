@@ -61,15 +61,31 @@ const freightWanted = () => Object.keys(LINE_GROUPS).some((g) => LINE_GROUPS[g].
 function safeGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
 function safeSet(k, v) { try { localStorage.setItem(k, v); } catch { /* private mode */ } }
 
+// Opening view: the lower 48 fitted into the part of the window the panel doesn't cover.
+const US_BOUNDS = [[-124.8, 24.4], [-66.9, 49.4]];
+function homePadding() {
+  const pad = { top: 24, right: 56, bottom: 24, left: 24 };   // right: room for the zoom buttons
+  const r = document.getElementById("panel").getBoundingClientRect();
+  if (r.top > innerHeight / 3) pad.bottom = Math.max(24, innerHeight - r.top + 12);   // phone: panel along the bottom
+  else pad.left = Math.max(24, r.right + 16);
+  // never pad away more than most of the window, or there's nothing left to fit into
+  pad.left = Math.min(pad.left, innerWidth * 0.6); pad.bottom = Math.min(pad.bottom, innerHeight * 0.6);
+  return pad;
+}
+
 const map = new maplibregl.Map({
   container: "map",
   style: `https://tiles.openfreemap.org/styles/${dark ? "dark" : "positron"}`,
-  center: [-96, 38.5],
-  zoom: 3.6,
+  bounds: US_BOUNDS,
+  fitBoundsOptions: { padding: homePadding() },
   maxZoom: 19.5,
   attributionControl: { compact: true },
 });
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+// Until the map is moved by hand, keep the US fitted as the window settles or is resized.
+let movedByHand = false;
+map.on("movestart", (e) => { if (e.originalEvent) movedByHand = true; });
+addEventListener("resize", () => { if (!movedByHand) map.fitBounds(US_BOUNDS, { padding: homePadding(), animate: false }); });
 
 // ---------- marker images ----------
 function canvas(w, h, draw) {
