@@ -3,16 +3,17 @@
 // each train is drawn to scale, car by car, following the real track.
 "use strict";
 
+// Bright, and clear of the blue (Amtrak) and green (commuter) track colours so trains stand out.
 const AGENCY_COLORS = {
-  "Amtrak": "#1f6feb",
-  "MBTA Commuter Rail": "#80276c",
-  "LIRR": "#0f8a5f",
-  "Metro-North": "#d1352b",
-  "SEPTA Regional Rail": "#4b6ea8",
-  "Metra": "#e07b00",
-  "Caltrain": "#b5121b",
-  "Metrolink": "#2f6b3a",
-  "NJ Transit Rail": "#7a4fbf",
+  "Amtrak": "#ff6a13",
+  "MBTA Commuter Rail": "#b84dff",
+  "LIRR": "#ffd60a",
+  "Metro-North": "#ff2e4c",
+  "SEPTA Regional Rail": "#00c2d1",
+  "Metra": "#c6ff00",
+  "Caltrain": "#ff4fa3",
+  "Metrolink": "#9d7bff",
+  "NJ Transit Rail": "#e040fb",
 };
 const FALLBACK_COLOR = "#888888";
 const TRACK_COLORS = ["match", ["get", "p"], "A", "#5b8def", "C", "#3fb68b", "#9aa3b2"];
@@ -84,8 +85,9 @@ function arrowImage(color) {
     g.beginPath();
     g.moveTo(16, 3); g.lineTo(25, 27); g.lineTo(16, 21); g.lineTo(7, 27);
     g.closePath();
-    g.lineJoin = "round"; g.lineWidth = 3; g.strokeStyle = PALETTE.halo; g.stroke();
+    g.lineJoin = "round"; g.lineWidth = 4; g.strokeStyle = PALETTE.halo; g.stroke();
     g.fillStyle = color; g.fill();
+    g.lineWidth = 1.5; g.strokeStyle = PALETTE.edge; g.stroke();
   });
 }
 
@@ -214,7 +216,7 @@ map.on("load", () => {
     filter: ["!", ["get", "dirKnown"]],
     paint: {
       "circle-color": color, "circle-radius": ["interpolate", ["linear"], ["zoom"], 3, 3.5, 9, 6],
-      "circle-stroke-color": PALETTE.halo, "circle-stroke-width": 1.5,
+      "circle-stroke-color": PALETTE.edge, "circle-stroke-width": 1.5,
     },
   });
   map.addLayer({   // zoomed out, direction known: an arrow
@@ -232,7 +234,7 @@ map.on("load", () => {
   map.addLayer({   // middle zooms with no heading at all
     id: "trains-dot-mid", type: "circle", source: "trains", minzoom: SPRITE_Z,
     filter: ["all", ["!", ["has", "hdg"]], ["!", ["get", "drawn"]]],
-    paint: { "circle-color": color, "circle-radius": 7, "circle-stroke-color": PALETTE.halo, "circle-stroke-width": 2 },
+    paint: { "circle-color": color, "circle-radius": 7, "circle-stroke-color": PALETTE.edge, "circle-stroke-width": 2 },
   });
   map.addLayer({
     id: "trains-label", type: "symbol", source: "trains", minzoom: 6,

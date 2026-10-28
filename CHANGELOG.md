@@ -15,6 +15,8 @@ All notable changes to this project are listed here. Versions follow [Semantic V
   Save to start the feed without a restart, Remove to switch it off. Only changeable from the server's own
   computer unless started with `--allow-remote-settings`.
 - Feed errors in the panel are in plain English (e.g. "Metra turned this key down (HTTP 401)").
+- Brighter train colours, with Amtrak moved from blue to orange so its trains no longer blend into the
+  blue Amtrak track; zoomed-out arrows and dots get a dark outline.
 
 ## [0.1.0] - 2026-10-28
 
