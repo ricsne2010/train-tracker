@@ -156,7 +156,9 @@ CI runs the tests and a build on Python 3.10–3.13 for every push and pull requ
 * [protobuf](https://github.com/protocolbuffers/protobuf), BSD-3-Clause
 * Development: [pytest](https://pytest.org) (MIT), [build](https://github.com/pypa/build) (MIT)
 
-**Logo:** Project Moon Pi.
+**Logo:** Project Moon Pi. The animated splash (lens flare, flickering lander engines, twinkling stars, metal
+sheen) is ported from the Project Moon Pi M.O.S.S. dash; `tools/make_splash_fx.py` (needs numpy, scipy and
+Pillow) maps the logo for it and only needs re-running if the logo changes.
 
 Built with Claude Code (Anthropic).
 

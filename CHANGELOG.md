@@ -17,6 +17,9 @@ All notable changes to this project are listed here. Versions follow [Semantic V
 - Feed errors in the panel are in plain English (e.g. "Metra turned this key down (HTTP 401)").
 - Brighter train colours, with Amtrak moved from blue to orange so its trains no longer blend into the
   blue Amtrak track; zoomed-out arrows and dots get a dark outline.
+- Animated start-up logo: a lens flare runs along the red swoosh and bursts at its tip, the lander's engines
+  flicker, the stars twinkle and light sweeps across the rings. The splash stays up until it has played
+  (click to skip); still for anyone who has reduced motion turned on.
 
 ## [0.1.0] - 2026-10-28
 

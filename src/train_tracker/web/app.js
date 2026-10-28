@@ -667,7 +667,8 @@ function esc(s) {
 }
 
 // ---------- splash ----------
-const splashWaiting = new Set(["map", "track", "trains"]);
+// Shown until the map, track and trains are in and the logo's lens flare has played (or on a click).
+const splashWaiting = new Set(["map", "track", "trains", "intro"]);
 function splashReady(what) {
   splashWaiting.delete(what);
   if (!splashWaiting.size) hideSplash();
@@ -679,6 +680,9 @@ function hideSplash() {
   setTimeout(() => s.remove(), 700);
 }
 map.on("load", () => splashReady("map"));
+SplashFX.play(document.getElementById("splash-logo"), "img/moon-pi-logo")
+  .catch((e) => console.warn("splash:", e.message))
+  .finally(() => splashReady("intro"));
 setTimeout(hideSplash, 8000);   // never hold the map back for long
 document.getElementById("splash").addEventListener("click", hideSplash);
 

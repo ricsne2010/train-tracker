@@ -80,16 +80,16 @@ ul { list-style: none; margin: 0; padding: 0; }
 
 /* start-up splash: the Project Moon Pi patch while the map, track and trains load */
 #splash { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 6px; background: #05070d; color: #e6e9ef; text-align: center; padding: 16px;
+  justify-content: center; gap: 6px; background: #000; color: #e6e9ef; text-align: center; padding: 16px;
   transition: opacity .6s ease; cursor: pointer; }
-#splash img { width: min(260px, 60vw); height: auto; animation: splash-in .9s ease-out both; }
+#splash canvas { width: min(332px, 76vw); height: auto; margin: -36px 0; animation: splash-in .9s ease-out both; }
 #splash h1 { font-size: 24px; margin: 14px 0 0; letter-spacing: .02em; }
 #splash p { margin: 0; color: #98a2b3; }
 #splash .loading { margin-top: 18px; font-size: 12px; color: #667085; animation: pulse 1.6s ease-in-out infinite; }
 #splash.gone { opacity: 0; pointer-events: none; }
 @keyframes splash-in { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
 @keyframes pulse { 50% { opacity: .4; } }
-@media (prefers-reduced-motion: reduce) { #splash img, #splash .loading { animation: none; } }
+@media (prefers-reduced-motion: reduce) { #splash canvas, #splash .loading { animation: none; } }
 
 #layers { margin-top: 14px; }
 #layers summary { cursor: pointer; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
