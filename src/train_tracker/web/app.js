@@ -472,6 +472,7 @@ function connect() {
     if (msg.type === "snapshot") {
       vehicles.clear();
       for (const v of msg.vehicles) vehicles.set(v.key, v);
+      if (msg.version) document.getElementById("version").textContent = `v${msg.version}`;
       splashReady("trains");
     } else if (msg.type === "update") {
       for (const k of msg.remove) { vehicles.delete(k); motion.delete(k); }

@@ -107,7 +107,7 @@ async def ws_handler(request):
     hub: Hub = request.app["hub"]
     ws = web.WebSocketResponse(heartbeat=30)
     await ws.prepare(request)
-    await ws.send_json({"type": "snapshot", "vehicles": list(hub.vehicles.values()),
+    await ws.send_json({"type": "snapshot", "version": __version__, "vehicles": list(hub.vehicles.values()),
                         "feeds": hub.feed_status(), "t": int(time.time())})
     hub.clients.add(ws)
     try:
@@ -189,7 +189,7 @@ def make_app(config_path: Path = DEFAULT_CONFIG, data_dir: Path = DEFAULT_DATA):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="train-tracker", description="Live US passenger-train map server")
-    ap.add_argument("--version", action="version", version=f"%(prog)s {__version__} (a Project Moon Pi project)")
+    ap.add_argument("--version", action="version", version=f"%(prog)s {__version__} - Designed and Created by Project Moon Pi")
     ap.add_argument("--host", default="127.0.0.1", help="use 0.0.0.0 to reach it from other devices")
     ap.add_argument("--port", type=int, default=7500)
     ap.add_argument("--config", type=Path, default=DEFAULT_CONFIG, help="feed definitions (default: bundled feeds.json)")
@@ -204,7 +204,7 @@ def main(argv=None):
     if args.command == "fetch-track":
         narn.fetch(args.data_dir / narn.FILENAME)
         return
-    log.info("US Train Tracker %s: a Project Moon Pi project", __version__)
+    log.info("US Train Tracker %s - Designed and Created by Project Moon Pi", __version__)
     load_dotenv(Path.cwd() / ".env")
     load_dotenv(args.data_dir / ".env")
     try:

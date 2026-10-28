@@ -19,6 +19,7 @@ First release.
 - Trains change with zoom: arrows, then a top-down train icon, then the full train drawn to scale car by
   car along the real track, gliding between updates. Detailed track (ballast, ties, rails, multiple tracks).
 - SEPTA and LIRR train numbers from trip IDs; SEPTA trains drawn with their live car count.
-- Project Moon Pi branding: start-up splash, header logo, favicon, About section and README.
+- Designed and Created by Project Moon Pi: logo on the start-up splash, header, favicon, About section and README.
+- Credits for every data feed, library, font and the basemap, in the README and the in-app About section.
 - Trains that have not departed yet (future-stamped positions at their origin) are hidden.
 - `train-tracker` command: `--port` (default 7500), `--host`, `--data-dir`, `--config`, `fetch-track`.

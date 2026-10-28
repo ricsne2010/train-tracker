@@ -2,7 +2,7 @@
 
 # US Train Tracker
 
-*A Project Moon Pi project.*
+**Designed and Created by Project Moon Pi**
 
 Live Amtrak and commuter-rail positions on a map of US passenger track, in your browser.
 
@@ -102,13 +102,36 @@ CI runs the tests and a build on Python 3.10–3.13 for every push and pull requ
 * NARN stores one centreline per route, so the track a train is on is inferred (right-hand running), not known.
 * Car counts are typical for each service except SEPTA, whose feed lists the cars.
 
-## Data and credits
+## Credits
 
-* Amtrak positions via [Transitdocs](https://transitdocs.com); schedule from Amtrak GTFS.
-* [Amtraker API](https://amtraker.com), ODC-By 1.0.
-* MBTA, MTA (LIRR, Metro-North), SEPTA, Metra, 511.org (Caltrain), Metrolink, NJ Transit.
-* Track: FRA North American Rail Network (public domain).
-* Basemap © [OpenFreeMap](https://openfreemap.org), © OpenStreetMap contributors.
+**Live data feeds** (each under its provider's terms of use):
+
+* Amtrak positions: [Transitdocs](https://transitdocs.com) GTFS-Realtime feed
+* Amtrak fallback: [Amtraker API](https://amtraker.com) by Piero Maddaleni, ODC-By 1.0
+* MBTA Commuter Rail: [MBTA V3/GTFS-RT](https://www.mbta.com/developers), MBTA Developer license
+* LIRR and Metro-North: [MTA GTFS-RT feeds](https://new.mta.info/developers), MTA data terms
+* SEPTA Regional Rail: [SEPTA GTFS-RT](https://www3.septa.org/developer/)
+* Metra, Caltrain ([511.org](https://511.org/open-data)), Metrolink and NJ Transit: their GTFS-RT feeds, with your own keys
+
+**Data and reference**
+
+* Track geometry: FRA [North American Rail Network](https://geodata.bts.gov/datasets/usdot::north-american-rail-network-lines/about) lines, public domain
+* Amtrak schedule, routes and stations: [Amtrak GTFS](https://content.amtrak.com/content/gtfs/GTFS.zip)
+* NJ Transit RailData endpoints: [jtarrio/raildata](https://github.com/jtarrio/raildata) (Apache-2.0), used as reference
+
+**Code, map and fonts**
+
+* [MapLibre GL JS](https://maplibre.org) 4.7.1, BSD-3-Clause
+* Basemap tiles: © [OpenFreeMap](https://openfreemap.org), © [OpenMapTiles](https://openmaptiles.org), map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL)
+* Noto Sans (via the OpenFreeMap glyphs), SIL Open Font License 1.1
+* [aiohttp](https://github.com/aio-libs/aiohttp), Apache-2.0
+* [gtfs-realtime-bindings](https://github.com/MobilityData/gtfs-realtime-bindings), Apache-2.0
+* [protobuf](https://github.com/protocolbuffers/protobuf), BSD-3-Clause
+* Development: [pytest](https://pytest.org) (MIT), [build](https://github.com/pypa/build) (MIT)
+
+**Logo:** Project Moon Pi.
+
+Built with Claude Code (Anthropic).
 
 ## License
 

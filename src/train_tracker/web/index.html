@@ -13,13 +13,13 @@
 <div id="splash" role="status" aria-label="Loading">
   <img src="img/moon-pi-logo.png" alt="Project Moon Pi">
   <h1>US Train Tracker</h1>
-  <p>A Project Moon Pi project</p>
+  <p>Designed and Created by Project Moon Pi</p>
   <span class="loading">Loading track and live trains…</span>
 </div>
 <div id="map"></div>
 <aside id="panel">
   <header>
-    <img class="brand" src="img/moon-pi-logo-128.png" alt="Project Moon Pi" title="A Project Moon Pi project">
+    <img class="brand" src="img/moon-pi-logo-128.png" alt="Project Moon Pi" title="Designed and Created by Project Moon Pi">
     <h1>US Train Tracker</h1>
     <span id="conn" class="conn off" title="Live connection">offline</span>
   </header>
@@ -29,12 +29,21 @@
   <h2>Agencies</h2>
   <ul id="agencies"></ul>
   <details id="credits">
-    <summary>About and data sources</summary>
-    <div class="about"><img src="img/moon-pi-logo-128.png" alt=""><p><strong>US Train Tracker</strong><br>A Project Moon Pi project</p></div>
+    <summary>About and credits</summary>
+    <div class="about"><img src="img/moon-pi-logo-128.png" alt="Project Moon Pi"><p><strong>US Train Tracker</strong> <span id="version"></span><br>Designed and Created by Project Moon Pi</p></div>
+    <h3>Live data</h3>
     <ul id="creditlist"></ul>
-    <p>Track: FRA North American Rail Network (public domain). Basemap © OpenFreeMap, © OpenStreetMap contributors.</p>
-    <p>Zoomed in, train length and cars are typical for each service, not live consist data.</p>
-    <p>The Project Moon Pi name and logo belong to Project Moon Pi.</p>
+    <h3>Credits</h3>
+    <ul class="credits">
+      <li>Track: FRA North American Rail Network (public domain)</li>
+      <li>Amtrak schedule: Amtrak GTFS</li>
+      <li>Map: MapLibre GL JS (BSD-3-Clause); basemap © OpenFreeMap, © OpenMapTiles, © OpenStreetMap contributors (ODbL); Noto Sans (OFL 1.1)</li>
+      <li>Server: aiohttp (Apache-2.0), gtfs-realtime-bindings (Apache-2.0), protobuf (BSD-3-Clause)</li>
+      <li>NJ Transit API reference: jtarrio/raildata (Apache-2.0)</li>
+      <li>Built with Claude Code (Anthropic)</li>
+    </ul>
+    <p>Zoomed in, train length and cars are typical for each service, not live consist data (SEPTA car counts are live).</p>
+    <p>US Train Tracker is MIT licensed. The Project Moon Pi name and logo belong to Project Moon Pi.</p>
   </details>
   <button id="toggle" aria-label="Toggle panel">☰</button>
 </aside>
