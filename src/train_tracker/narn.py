@@ -10,6 +10,8 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+from .net import ssl_context
+
 LAYER = ("https://services.arcgis.com/xOi1kZaI0eWDREZv/arcgis/rest/services/"
          "NTAD_North_American_Rail_Network_Lines/FeatureServer/0/query")
 FILENAME = "narn_passenger_v2.geojson"   # v2 adds track counts
@@ -29,7 +31,7 @@ def _query(offset):
         "outSR": 4326,
         "f": "geojson",
     })
-    with urllib.request.urlopen(f"{LAYER}?{q}", timeout=120) as r:
+    with urllib.request.urlopen(f"{LAYER}?{q}", timeout=120, context=ssl_context()) as r:
         return json.load(r)
 
 

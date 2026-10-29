@@ -5,7 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>US Train Tracker</title>
 <link rel="icon" href="img/moon-pi-logo-128.png">
-<link rel="apple-touch-icon" href="img/moon-pi-logo-128.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f1218">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Trains">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -58,6 +64,13 @@
     <button id="layers-reset" type="button">Show everything</button>
     <button id="share-view" type="button">Copy link to this view</button>
   </details>
+  <details id="phone" hidden>
+    <summary>Open on your phone</summary>
+    <p>On a phone or tablet on the same Wi-Fi, scan this or type the address:</p>
+    <div id="phone-qr"></div>
+    <p><a id="phone-url" href="#"></a></p>
+    <p class="hint">Then use Share → Add to Home Screen (iPhone) or ⋮ → Add to Home screen (Android) for a Train Tracker icon.</p>
+  </details>
   <details id="credits">
     <summary>About and credits</summary>
     <div class="about"><img src="img/moon-pi-logo-128.png" alt="Project Moon Pi"><p><strong>US Train Tracker</strong> <span id="version"></span><br>Designed and Created by Project Moon Pi</p></div>
@@ -68,7 +81,8 @@
       <li>Track: FRA North American Rail Network (public domain)</li>
       <li>Schedules and stations: each railroad's published GTFS (Amtrak, MBTA, MTA, SEPTA, Caltrain, Metrolink, MARC, VRE, RTD, CapMetro)</li>
       <li>Map: MapLibre GL JS (BSD-3-Clause); basemap © OpenFreeMap, © OpenMapTiles, © OpenStreetMap contributors (ODbL); Noto Sans (OFL 1.1)</li>
-      <li>Server: aiohttp (Apache-2.0), gtfs-realtime-bindings (Apache-2.0), protobuf (BSD-3-Clause)</li>
+      <li>Server: aiohttp (Apache-2.0), gtfs-realtime-bindings (Apache-2.0), protobuf (BSD-3-Clause), certifi (MPL-2.0)</li>
+      <li>QR code: qrcode-generator by Kazuhiko Arase (MIT)</li>
       <li>NJ Transit API reference: jtarrio/raildata (Apache-2.0)</li>
       <li>Built with Claude Code (Anthropic)</li>
     </ul>
@@ -81,6 +95,7 @@
 <script src="track.js"></script>
 <script src="splashfx.js"></script>
 <script src="more.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
 <script src="app.js"></script>
 </body>
 </html>

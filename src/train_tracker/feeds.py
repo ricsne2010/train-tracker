@@ -21,6 +21,7 @@ COMPASS = {"N": 0, "NE": 45, "E": 90, "SE": 135, "S": 180, "SW": 225, "W": 270, 
 STATUS = {0: "INCOMING_AT", 1: "STOPPED_AT", 2: "IN_TRANSIT_TO"}
 TIMEOUT = aiohttp.ClientTimeout(total=20)
 ALERTS_EVERY_S = 300
+TRIP_UPDATES_EVERY_S = 60   # separate prediction feeds are large (MBTA's is ~800 KB), and a minute is fresh enough
 
 
 class MissingKey(Exception):
@@ -72,6 +73,7 @@ class Feed:
         self.trips = {}             # trip_id -> realtime.trip_state, from the latest trip updates
         self.alerts = []            # active service alerts (realtime.parse_alert)
         self.alerts_at = 0
+        self.trips_at = 0
         self.env = None             # environment for ${KEY} placeholders (None: os.environ)
         # health, reported on /api/status
         self.disabled = None        # reason string if the feed cannot run
@@ -124,7 +126,9 @@ class GtfsRtFeed(Feed):
 
     async def fetch(self, session):
         body = await self.get(session, self.cfg["url"])
-        tu = await self.extra(session, "trip_updates_url") if self.cfg.get("trip_updates_url") else None
+        tu = None
+        if self.cfg.get("trip_updates_url") and time.time() - self.trips_at > TRIP_UPDATES_EVERY_S:
+            tu = await self.extra(session, "trip_updates_url")
         alerts = None
         if self.cfg.get("alerts_url") and time.time() - self.alerts_at > ALERTS_EVERY_S:
             alerts = await self.extra(session, "alerts_url")
@@ -152,6 +156,7 @@ class GtfsRtFeed(Feed):
                         if t["trip_id"]:
                             trips[t["trip_id"]] = t
             self.trips = trips
+            self.trips_at = time.time()
         if al_msg is not None:
             alerts = [realtime.parse_alert(ent) for ent in al_msg.entity if ent.HasField("alert")]
             self.alerts = [a for a in alerts if a and self.alert_is_ours(a)]

@@ -1,0 +1,22 @@
+# US Train Tracker as an always-on service (Raspberry Pi or any Linux with systemd).
+# Designed and Created by Project Moon Pi.
+#
+# Install (replace nothing: %i is your username, given when you enable it):
+#   sudo cp train-tracker@.service /etc/systemd/system/
+#   sudo systemctl enable --now train-tracker@$USER
+# It expects the app in ~/train-tracker (python3 -m venv ~/train-tracker; ~/train-tracker/bin/pip install ...).
+# Check on it:  systemctl status train-tracker@$USER     Logs:  journalctl -u train-tracker@$USER -f
+
+[Unit]
+Description=US Train Tracker (Designed and Created by Project Moon Pi)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=%i
+ExecStart=/home/%i/train-tracker/bin/train-tracker --host 0.0.0.0
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

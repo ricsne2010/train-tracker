@@ -203,3 +203,11 @@ ul { list-style: none; margin: 0; padding: 0; }
 #toast { position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%); z-index: 6; padding: 8px 14px;
   background: var(--fg); color: var(--bg); border-radius: 8px; font-size: 13px; box-shadow: 0 2px 10px rgba(0,0,0,.25); }
 @media (max-width: 640px) { #following { top: 8px; } }
+
+/* open on your phone */
+#phone { margin-top: 14px; font-size: 13px; }
+#phone summary { cursor: pointer; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+#phone p { margin: 6px 0; }
+#phone .hint { font-size: 12px; color: var(--muted); }
+#phone-qr svg { display: block; width: 164px; height: 164px; margin: 4px 0; background: #fff; border-radius: 6px; }
+#phone-url { font-weight: 600; word-break: break-all; }

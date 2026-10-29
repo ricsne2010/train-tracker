@@ -6,6 +6,39 @@
 
 Live Amtrak and commuter-rail positions on a map of US passenger track, in your browser.
 
+**New here? Follow the [Installation Guide](docs/INSTALL.md)** ([printable PDF](docs/US-Train-Tracker-Install-Guide.pdf)):
+step by step for Mac, Windows, Raspberry Pi, iPhone and Android, no programming needed.
+
+## How it works
+
+US Train Tracker is two parts:
+
+1. **A server** that runs on a computer you own: a Mac, a Windows PC, a Linux box or a Raspberry Pi. It collects
+   live positions, arrival predictions and service alerts from Amtrak and the commuter railroads every 20–60
+   seconds, plus each railroad's schedule and the FRA rail map, and keeps one up-to-date picture of every train.
+2. **A map in your web browser.** Open it on the same computer, or on any phone, tablet or computer on the same
+   Wi-Fi. The server pushes each change to the map as it happens, so trains move without reloading.
+
+```
+ railroad feeds, schedules, alerts ─►  server on your Mac / PC / Pi (port 7500)  ─►  browser on the computer,
+ FRA rail map                      ─►  (Python)                                   ─►  phones and tablets on your Wi-Fi
+```
+
+**Phones and tablets** show the map, and it can sit on the home screen like an app, but they can't run the
+server: that needs a computer at home. A Raspberry Pi left on makes the map available all the time. Nothing is
+shared beyond your own network unless you set up remote access (the guide covers a safe way).
+
+## What you need
+
+| | |
+|---|---|
+| **Server computer** | macOS 11 or newer, Windows 10 or 11, Linux, or a Raspberry Pi 4 or 5 (3B+ works, more slowly) |
+| **Python** | 3.10 or newer from [python.org](https://www.python.org/downloads/) (3.12+ recommended; 3.10 is out of security support) |
+| **Memory** | about 150–200 MB while running |
+| **Disk** | about 200 MB (app ~40 MB, downloaded maps and schedules ~140 MB) |
+| **Internet** | always on while running: ~140 MB on first start, then about 130 MB an hour |
+| **To view the map** | a current Safari, Chrome, Edge or Firefox; iPhone/iPad on iOS 15+, or Android with current Chrome |
+
 ## On the map
 
 * **Zoomed out:** coloured arrows (or dots when a train's direction isn't known yet) across the country.
@@ -33,7 +66,13 @@ Live Amtrak and commuter-rail positions on a map of US passenger track, in your 
 
 ## Install and run
 
-Needs Python 3.10 or newer.
+**The easy way:** download **Source code (zip)** from the [latest release](../../releases/latest), unzip it and
+double-click **Start Train Tracker** (`.command` on a Mac, `.bat` on Windows). The first start sets everything up
+in that folder and opens the map. Use the **(phones too)** launcher to let phones on your Wi-Fi open it as well;
+the map's panel then shows the address and a QR code. Details, the Raspberry Pi setup and troubleshooting are
+in the [Installation Guide](docs/INSTALL.md).
+
+**From the command line** (Python 3.10 or newer):
 
 **From a release:** download the `.whl` file from the [Releases](../../releases) page, then:
 
@@ -60,6 +99,7 @@ FRA track map (~4 MB) and Amtrak's schedule into `~/.train-tracker/`.
 | `--host` | `127.0.0.1` | `0.0.0.0` to open it from a phone or another computer on your network |
 | `--data-dir` | `~/.train-tracker` | downloads and `.env` |
 | `--allow-remote-settings` | off | let other devices change API keys on the settings page |
+| `--open` | off | open the map in your browser once it's running (the launchers use this) |
 | `--config` | bundled `feeds.json` | your own feed list |
 | `fetch-track` | | re-download the NARN track map |
 | `--version` | | |
@@ -132,6 +172,11 @@ with buses) and a colour in `AGENCY_COLORS` in
 
 CI runs the tests and a build on Python 3.10–3.13 for every push and pull request.
 
+### Installation Guide
+
+[docs/INSTALL.md](docs/INSTALL.md) is the guide; after editing it, rebuild the printable copy with
+`python3 tools/make_guide_pdf.py` (needs reportlab, Pillow and the DejaVu fonts). Releases attach the PDF.
+
 ### Releasing
 
 1. Write the changes under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md) and commit.
@@ -182,6 +227,9 @@ CI runs the tests and a build on Python 3.10–3.13 for every push and pull requ
 * [aiohttp](https://github.com/aio-libs/aiohttp), Apache-2.0
 * [gtfs-realtime-bindings](https://github.com/MobilityData/gtfs-realtime-bindings), Apache-2.0
 * [protobuf](https://github.com/protocolbuffers/protobuf), BSD-3-Clause
+* [certifi](https://github.com/certifi/python-certifi) (Mozilla's CA certificates), MPL-2.0
+* [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) by Kazuhiko Arase, MIT (the "Open on your phone" QR code)
+* Printable guide: [reportlab](https://www.reportlab.com/opensource/) (BSD) and [DejaVu Sans](https://dejavu-fonts.github.io/) (Bitstream Vera / DejaVu licence)
 * Development: [pytest](https://pytest.org) (MIT), [build](https://github.com/pypa/build) (MIT)
 
 **Logo:** Project Moon Pi. The animated splash (lens flare, flickering lander engines, twinkling stars, metal

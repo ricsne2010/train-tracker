@@ -37,4 +37,8 @@ jobs:
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --notes-file notes.md
+        run: |
+          printf '\n**New here?** Download **Source code (zip)** below and follow the [Installation Guide](https://github.com/%s/blob/%s/docs/INSTALL.md) (also attached as a PDF).\n' \
+            "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" >> notes.md
+          gh release create "$GITHUB_REF_NAME" dist/* docs/US-Train-Tracker-Install-Guide.pdf \
+            --title "$GITHUB_REF_NAME" --notes-file notes.md

@@ -989,6 +989,23 @@ function applyOptions() {
 }
 applyOptions();
 
+// ---------- open on your phone ----------
+// Shown when the server listens on the network (started with --host 0.0.0.0), with a QR code of its address.
+fetch("api/info").then((r) => r.json()).then((info) => {
+  if (!info.phone_url) return;
+  document.getElementById("phone").hidden = false;
+  const a = document.getElementById("phone-url");
+  a.href = a.textContent = info.phone_url;
+  const draw = () => {
+    if (!window.qrcode) return setTimeout(draw, 300);
+    const qr = qrcode(0, "M");
+    qr.addData(info.phone_url);
+    qr.make();
+    document.getElementById("phone-qr").innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+  };
+  draw();
+}).catch(() => {});
+
 addMoreHint(document.getElementById("panel"));
 
 // ---------- splash ----------

@@ -14,6 +14,7 @@ dependencies = [
     "aiohttp>=3.9",
     "gtfs-realtime-bindings>=1.0",
     "protobuf>=4.21",
+    "certifi>=2024.2.2",
     "tzdata; platform_system == 'Windows'",   # time zones for working out lateness (macOS and Linux have them)
 ]
 

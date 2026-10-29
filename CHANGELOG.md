@@ -4,6 +4,15 @@ All notable changes to this project are listed here. Versions follow [Semantic V
 
 ## [Unreleased]
 
+- Installation Guide (docs/INSTALL.md and a printable PDF): Mac, Windows, Raspberry Pi, iPhone and Android,
+  with machine requirements and how it works; the README now leads with both.
+- Double-click launchers for Mac (`.command`) and Windows (`.bat`), plus "(phones too)" versions that let phones
+  on the same Wi-Fi open the map; `--open` opens the browser once the server is up.
+- "Open on your phone" in the panel: the address and a QR code, when the server listens on the network.
+- Add to Home Screen: app icon and web app manifest, so the map opens full screen like an app on iPhone.
+- Raspberry Pi service file (tools/train-tracker@.service) to start at power-on.
+- Works with python.org's Python on macOS without its "Install Certificates" step (certificates from certifi).
+- Separate prediction feeds are fetched once a minute, cutting data use to about 130 MB an hour.
 - Next stop, predicted time and how late each train is running, from each railroad's trip updates (worked
   out against the timetable where the feed only gives times).
 - Stations from every railroad's schedule; click one for its next trains. Search finds stations.

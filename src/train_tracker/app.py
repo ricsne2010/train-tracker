@@ -4,6 +4,7 @@ import asyncio
 import errno
 import json
 import logging
+import mimetypes
 import os
 import sys
 import time
@@ -12,7 +13,7 @@ from pathlib import Path
 import aiohttp
 from aiohttp import web
 
-from . import __version__, narn, realtime, settings
+from . import __version__, narn, net, realtime, settings
 from . import feeds as feedmod
 from .gtfs_static import load_static
 
@@ -25,6 +26,7 @@ MAX_SKEW_S = 120
 TRAIL_S = 15 * 60                  # how far back each train's trail goes
 STATIC_REFRESH_S = 6 * 3600        # how often to check for new schedules
 log = logging.getLogger("trains")
+mimetypes.add_type("application/manifest+json", ".webmanifest")
 
 
 def load_dotenv(path: Path):
@@ -219,6 +221,11 @@ async def status_handler(request):
     return web.json_response(request.app["hub"].feed_status())
 
 
+async def info_handler(request):
+    """Version, and the address phones on this network can use (when the server listens beyond this computer)."""
+    return web.json_response({"version": __version__, "phone_url": request.app.get("phone_url")})
+
+
 async def alerts_handler(request):
     return web.json_response(request.app["hub"].all_alerts())
 
@@ -280,7 +287,8 @@ async def lines_handler(request):
 async def on_startup(app):
     hub: Hub = app["hub"]
     data_dir: Path = app["data_dir"]
-    session = aiohttp.ClientSession(headers={"User-Agent": f"train-tracker/{__version__}"})
+    session = aiohttp.ClientSession(headers={"User-Agent": f"train-tracker/{__version__}"},
+                                    connector=aiohttp.TCPConnector(ssl=net.ssl_context()))
     app["session"] = hub.session = session
     data_dir.mkdir(parents=True, exist_ok=True)
     track = data_dir / narn.FILENAME
@@ -329,8 +337,10 @@ async def on_cleanup(app):
     await app["session"].close()
 
 
-def make_app(config_path: Path = DEFAULT_CONFIG, data_dir: Path = DEFAULT_DATA, allow_remote_settings=False):
+def make_app(config_path: Path = DEFAULT_CONFIG, data_dir: Path = DEFAULT_DATA, allow_remote_settings=False,
+             phone_url=None):
     app = web.Application()
+    app["phone_url"] = phone_url
     app["hub"] = Hub(json.loads(config_path.read_text()))
     app["data_dir"] = data_dir
     app["cell_locks"] = {}
@@ -340,6 +350,7 @@ def make_app(config_path: Path = DEFAULT_CONFIG, data_dir: Path = DEFAULT_DATA, 
     app.router.add_get("/ws", ws_handler)
     app.router.add_get("/api/vehicles", vehicles_handler)
     app.router.add_get("/api/status", status_handler)
+    app.router.add_get("/api/info", info_handler)
     app.router.add_get("/api/alerts", alerts_handler)
     app.router.add_get("/api/stations", stations_handler)
     app.router.add_get("/api/station/{feed}/{id}", station_handler)
@@ -359,6 +370,7 @@ def main(argv=None):
     ap.add_argument("--config", type=Path, default=DEFAULT_CONFIG, help="feed definitions (default: bundled feeds.json)")
     ap.add_argument("--data-dir", type=Path, default=DEFAULT_DATA,
                     help="downloads and .env (default: ~/.train-tracker)")
+    ap.add_argument("--open", action="store_true", help="open the map in your web browser once it's running")
     ap.add_argument("--allow-remote-settings", action="store_true",
                     help="let other devices change API keys on the settings page (default: this computer only)")
     sub = ap.add_subparsers(dest="command")
@@ -373,8 +385,20 @@ def main(argv=None):
     log.info("US Train Tracker %s - Designed and Created by Project Moon Pi", __version__)
     load_dotenv(Path.cwd() / ".env")
     load_dotenv(args.data_dir / ".env")
+    phone_url = None
+    if args.host not in ("127.0.0.1", "localhost", "::1"):
+        ip = net.lan_address() if args.host in ("0.0.0.0", "::", "") else args.host
+        if ip:
+            phone_url = f"http://{ip}:{args.port}"
+            log.info("On a phone or tablet on this network, open %s", phone_url)
+    app = make_app(args.config, args.data_dir, args.allow_remote_settings, phone_url)
+    if args.open:
+        async def open_browser(app):
+            import webbrowser
+            asyncio.get_running_loop().call_later(1.0, webbrowser.open, f"http://127.0.0.1:{args.port}")
+        app.on_startup.append(open_browser)
     try:
-        web.run_app(make_app(args.config, args.data_dir, args.allow_remote_settings), host=args.host, port=args.port)
+        web.run_app(app, host=args.host, port=args.port)
     except OSError as e:
         if e.errno != errno.EADDRINUSE:
             raise
