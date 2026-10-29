@@ -17,6 +17,8 @@
   <span class="loading">Loading track and live trains…</span>
 </div>
 <div id="map"></div>
+<div id="following" hidden><span></span><button type="button" aria-label="Stop following">Stop</button></div>
+<div id="toast" role="status" hidden></div>
 <aside id="panel">
   <header>
     <img class="brand" src="img/moon-pi-logo-128.png" alt="Project Moon Pi" title="Designed and Created by Project Moon Pi">
@@ -24,13 +26,29 @@
     <span id="conn" class="conn off" title="Live connection">offline</span>
   </header>
   <p id="summary">Connecting…</p>
-  <input id="search" type="search" placeholder="Train number or route" autocomplete="off">
+  <input id="search" type="search" placeholder="Train number, route or station" autocomplete="off">
   <ul id="results"></ul>
   <h2>Agencies</h2>
   <ul id="agencies"></ul>
   <a class="keys-link" href="settings.html">API keys…</a>
+  <details id="alerts" hidden>
+    <summary>Service alerts <span id="alert-count" class="badge"></span></summary>
+    <div id="alert-list"></div>
+  </details>
   <details id="layers" open>
     <summary>Map layers</summary>
+    <h3>Trains and stations</h3>
+    <ul class="checks">
+      <li><label><input type="checkbox" id="opt-stations" checked> Stations <span class="hint">click one for its next trains</span></label></li>
+      <li><label><input type="checkbox" id="opt-trails" checked> Trails <span class="hint">last 15 minutes</span></label></li>
+      <li><label><input type="checkbox" id="opt-late"> Colour trains by lateness</label></li>
+    </ul>
+    <ul id="late-legend" class="legend" hidden>
+      <li><span class="swatch" style="background:#22c55e"></span>On time or under 5 min late</li>
+      <li><span class="swatch" style="background:#f5b400"></span>5 to 15 min late</li>
+      <li><span class="swatch" style="background:#ef4444"></span>Over 15 min late</li>
+      <li><span class="swatch" style="background:#9aa3ad"></span>Not known</li>
+    </ul>
     <h3>Passenger lines</h3>
     <ul id="lines-passenger" class="checks"></ul>
     <h3>Freight and other track <span class="hint">from city zoom</span></h3>
@@ -38,6 +56,7 @@
     <h3>Railroads in view</h3>
     <ul id="owners" class="checks"></ul>
     <button id="layers-reset" type="button">Show everything</button>
+    <button id="share-view" type="button">Copy link to this view</button>
   </details>
   <details id="credits">
     <summary>About and credits</summary>
@@ -47,7 +66,7 @@
     <h3>Credits</h3>
     <ul class="credits">
       <li>Track: FRA North American Rail Network (public domain)</li>
-      <li>Amtrak schedule: Amtrak GTFS</li>
+      <li>Schedules and stations: each railroad's published GTFS (Amtrak, MBTA, MTA, SEPTA, Caltrain, Metrolink, MARC, VRE, RTD, CapMetro)</li>
       <li>Map: MapLibre GL JS (BSD-3-Clause); basemap © OpenFreeMap, © OpenMapTiles, © OpenStreetMap contributors (ODbL); Noto Sans (OFL 1.1)</li>
       <li>Server: aiohttp (Apache-2.0), gtfs-realtime-bindings (Apache-2.0), protobuf (BSD-3-Clause)</li>
       <li>NJ Transit API reference: jtarrio/raildata (Apache-2.0)</li>

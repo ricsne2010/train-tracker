@@ -91,3 +91,40 @@ def test_lines_handler_fetches_once_then_serves_cache(tmp_path, monkeypatch):
     assert (tmp_path / "narn_cells" / "-210_80.geojson").exists()
     with pytest.raises(web.HTTPBadRequest):
         get(10, 80)
+
+
+def test_trails_follow_moves_and_go_with_the_train():
+    hub = Recorder()
+    asyncio.run(hub.replace_feed("f", [vehicle("f:1", lat=40.0)]))
+    asyncio.run(hub.replace_feed("f", [vehicle("f:1", lat=40.0)]))      # didn't move: no new point
+    asyncio.run(hub.replace_feed("f", [vehicle("f:1", lat=40.1)]))
+    assert [p[1] for p in hub.trails["f:1"]] == [40.0, 40.1]
+    asyncio.run(hub.replace_feed("f", []))
+    assert "f:1" not in hub.trails
+
+
+def test_station_board_lists_upcoming_trains_with_lateness():
+    from train_tracker.feeds import GtfsRtFeed
+    from train_tracker.gtfs_static import StaticGtfs
+    s = StaticGtfs()
+    s.routes["H"] = {"name": "Harlem", "color": None}
+    s.trips["T1"] = {"route_id": "H", "train": "540", "headsign": "Grand Central"}
+    s.stops["WP"] = {"name": "White Plains", "lat": 41.03, "lon": -73.76, "station": "WP"}
+    s.stops["GC"] = {"name": "Grand Central", "lat": 40.75, "lon": -73.98, "station": "GC"}
+    s.stations["WP"] = {"name": "White Plains", "lat": 41.03, "lon": -73.76, "routes": ["Harlem"]}
+    now = int(time.time())
+    feed = GtfsRtFeed({"id": "mnr", "agency": "Metro-North", "kind": "gtfsrt", "mode": "commuter", "url": "x",
+                       "static": {"url": "x"}}, {"mnr": s})
+    feed.trips = {"T1": {"trip_id": "T1", "entity": "540", "sched": None, "route_id": "H", "start_date": None,
+                         "vehicle_id": None, "delay": None,
+                         "stops": [("WP", now + 600, now + 630, 120), ("GC", now + 2400, None, 120)]},
+                  "T0": {"trip_id": "T0", "entity": "1", "sched": None, "route_id": "H", "start_date": None,
+                         "vehicle_id": None, "delay": None, "stops": [("WP", now - 900, now - 870, 0)]}}
+    hub = Recorder()
+    hub.feeds = [feed]
+    board = hub.station_board("mnr", "WP")
+    assert board["name"] == "White Plains"
+    [row] = board["trains"]                       # the train that already left isn't listed
+    assert (row["train"], row["headsign"], row["delay"], row["ends_here"]) == ("540", "Grand Central", 120, False)
+    assert hub.station_board("mnr", "nowhere") is None
+    assert hub.stations()["features"][0]["properties"]["name"] == "White Plains"

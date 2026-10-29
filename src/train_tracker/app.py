@@ -12,7 +12,7 @@ from pathlib import Path
 import aiohttp
 from aiohttp import web
 
-from . import __version__, narn, settings
+from . import __version__, narn, realtime, settings
 from . import feeds as feedmod
 from .gtfs_static import load_static
 
@@ -22,6 +22,8 @@ DEFAULT_CONFIG = PKG / "feeds.json"
 DEFAULT_DATA = Path.home() / ".train-tracker"
 CELL_MAX_AGE_S = 90 * 24 * 3600   # NARN is updated a few times a year
 MAX_SKEW_S = 120
+TRAIL_S = 15 * 60                  # how far back each train's trail goes
+STATIC_REFRESH_S = 6 * 3600        # how often to check for new schedules
 log = logging.getLogger("trains")
 
 
@@ -43,8 +45,70 @@ class Hub:
         self.vehicles = {}      # key -> vehicle json
         self.clients = set()
         self.tasks = {}         # feed id -> poll task
-        self.statics = {}
+        self.statics = {}       # feed id -> StaticGtfs, filled in the background
         self.session = None
+        self.trails = {}        # key -> [[lon, lat, t], ...] over the last TRAIL_S
+        self.stations_fc = None # GeoJSON of every railroad's stations, rebuilt when schedules load
+        self.sent_alerts = {}   # feed id -> alerts last sent to browsers
+
+    def all_alerts(self):
+        return {f.id: f.alerts for f in self.feeds if f.alerts}
+
+    async def send_alerts_if_changed(self, feed):
+        if self.sent_alerts.get(feed.id, []) != feed.alerts:
+            self.sent_alerts[feed.id] = feed.alerts
+            await self.broadcast({"type": "alerts", "alerts": self.all_alerts()})
+
+    def stations(self):
+        if self.stations_fc is None:
+            feats = []
+            for f in self.feeds:
+                st = f.static
+                if not st or f.fallback_for:
+                    continue
+                for sid, s in st.stations.items():
+                    feats.append({"type": "Feature", "geometry": {"type": "Point", "coordinates": [s["lon"], s["lat"]]},
+                                  "properties": {"feed": f.id, "id": sid, "name": s["name"], "agency": f.agency,
+                                                 "routes": ", ".join(s["routes"][:6])}})
+            self.stations_fc = {"type": "FeatureCollection", "features": feats}
+        return self.stations_fc
+
+    def station_board(self, feed_id, station_id, limit=12):
+        """Upcoming trains at one station, from the railroad's live trip updates."""
+        feed = self.by_id(feed_id)
+        static = feed.static if feed else None
+        if not static or station_id not in static.stations:
+            return None
+        now = time.time()
+        live = {v["trip_id"]: v for v in self.vehicles.values() if v["feed"] == feed_id and v.get("trip_id")}
+        rows = []
+        for trip in feed.trips.values():
+            for stop in trip["stops"]:
+                if static.station_of(stop[0]) != station_id:
+                    continue
+                t = stop[1] or stop[2]
+                if not t or t < now - 60:
+                    break
+                info = static.trips.get(trip["sched"] or trip["trip_id"], {})
+                v = live.get(trip["trip_id"]) or live.get(trip["entity"]) or {}
+                # where the train ends: the timetable's last stop (Metro-North only predicts the next few)
+                planned = static.times.get(trip["sched"] or trip["trip_id"])
+                last = max(planned, key=lambda s: planned[s][0] or planned[s][1] or 0) if planned else trip["stops"][-1][0]
+                ends_here = static.station_of(last) == station_id
+                rows.append({
+                    "time": t, "delay": realtime.stop_delay(trip, stop, static, now), "ends_here": ends_here,
+                    "train": v.get("train") or info.get("train"), "key": v.get("key"),
+                    "route": static.routes.get(trip["route_id"] or info.get("route_id"), {}).get("name"),
+                    "headsign": info.get("headsign") or (None if ends_here else static.stop_name(last)),
+                })
+                break
+        rows.sort(key=lambda r: r["time"])
+        st = static.stations[station_id]
+        here = {sid for sid, s in static.stops.items() if s["station"] == station_id} | {station_id}
+        alerts = [a for a in feed.alerts if here & set(a["stops"])]
+        return {"feed": feed_id, "agency": feed.agency, "id": station_id, "name": st["name"],
+                "routes": st["routes"], "trains": rows[:limit], "alerts": alerts,
+                "live": bool(feed.trips), "t": int(now)}
 
     def feed_status(self):
         return [f.status() for f in self.feeds]
@@ -70,7 +134,15 @@ class Hub:
         upsert = [v for k, v in fresh.items() if self.vehicles.get(k) != v]
         for k in remove:
             del self.vehicles[k]
+            self.trails.pop(k, None)
         self.vehicles.update(fresh)
+        for k, v in fresh.items():
+            trail = self.trails.setdefault(k, [])
+            point = [v["lon"], v["lat"], v["timestamp"]]
+            if not trail or trail[-1][:2] != point[:2]:
+                trail.append(point)
+            while trail and trail[0][2] < now - TRAIL_S:
+                trail.pop(0)
         await self.broadcast({"type": "update", "upsert": upsert, "remove": remove,
                               "feeds": self.feed_status(), "t": int(now)})
 
@@ -108,6 +180,7 @@ class Hub:
                     vehicles = await feed.fetch(session)
                     feed.last_ok, feed.last_error, feed.count = time.time(), None, len(vehicles)
                     await self.replace_feed(feed.id, vehicles)
+                    await self.send_alerts_if_changed(feed)
                 except Exception as e:
                     feed.last_error = feedmod.describe_error(feed.agency, e)[:300]
                     log.warning("%s: %s", feed.id, feed.last_error)
@@ -127,7 +200,8 @@ async def ws_handler(request):
     ws = web.WebSocketResponse(heartbeat=30)
     await ws.prepare(request)
     await ws.send_json({"type": "snapshot", "version": __version__, "vehicles": list(hub.vehicles.values()),
-                        "feeds": hub.feed_status(), "t": int(time.time())})
+                        "feeds": hub.feed_status(), "alerts": hub.all_alerts(), "trails": hub.trails,
+                        "t": int(time.time())})
     hub.clients.add(ws)
     try:
         async for _ in ws:
@@ -143,6 +217,23 @@ async def vehicles_handler(request):
 
 async def status_handler(request):
     return web.json_response(request.app["hub"].feed_status())
+
+
+async def alerts_handler(request):
+    return web.json_response(request.app["hub"].all_alerts())
+
+
+async def stations_handler(request):
+    resp = web.json_response(request.app["hub"].stations(), content_type="application/geo+json")
+    resp.enable_compression()
+    return resp
+
+
+async def station_handler(request):
+    board = request.app["hub"].station_board(request.match_info["feed"], request.match_info["id"])
+    if board is None:
+        raise web.HTTPNotFound(text="no such station (or its schedule hasn't loaded yet)")
+    return web.json_response(board)
 
 
 async def index_handler(request):
@@ -203,15 +294,33 @@ async def on_startup(app):
         except Exception as e:
             log.warning("NARN download failed (%s); map will show trains without track. "
                         "Retry with: train-tracker fetch-track", e)
-    for cfg in hub.config["feeds"]:
-        name = cfg.get("static")
-        if name and name not in hub.statics:
-            hub.statics[name] = await load_static(name, data_dir, session)
     hub.feeds = [feedmod.build(cfg, hub.statics) for cfg in hub.config["feeds"]]
     for f in hub.feeds:
         if f.disabled:
             log.info("%s disabled: %s", f.id, f.disabled)
         hub.start(f)
+    hub.tasks["_schedules"] = asyncio.create_task(schedules_loop(hub, data_dir, session))
+
+
+async def schedules_loop(hub, data_dir, session):
+    """Load each railroad's schedule (stop names, stations, timetables) one at a time, without holding up
+    the trains, and check for new ones every few hours."""
+    while True:
+        for cfg in hub.config["feeds"]:
+            spec = cfg.get("static")
+            if not spec:
+                continue
+            try:
+                spec = {k: feedmod.expand(v) for k, v in spec.items()}
+                spec.setdefault("rail_routes", cfg.get("route_ids", ()))
+            except feedmod.MissingKey:
+                continue    # this schedule needs the railroad's API key
+            static = await load_static(cfg["id"], spec, data_dir, session)
+            if static and hub.statics.get(cfg["id"]) is not static:
+                hub.statics[cfg["id"]] = static
+                hub.stations_fc = None
+                await hub.broadcast({"type": "stations"})
+        await asyncio.sleep(STATIC_REFRESH_S)
 
 
 async def on_cleanup(app):
@@ -231,6 +340,9 @@ def make_app(config_path: Path = DEFAULT_CONFIG, data_dir: Path = DEFAULT_DATA, 
     app.router.add_get("/ws", ws_handler)
     app.router.add_get("/api/vehicles", vehicles_handler)
     app.router.add_get("/api/status", status_handler)
+    app.router.add_get("/api/alerts", alerts_handler)
+    app.router.add_get("/api/stations", stations_handler)
+    app.router.add_get("/api/station/{feed}/{id}", station_handler)
     app.router.add_get(f"/data/{narn.FILENAME}", track_handler)
     app.router.add_get(r"/api/lines/{cx:-?\d+}/{cy:-?\d+}", lines_handler)
     app.router.add_static("/", WEB)

@@ -23,6 +23,9 @@ class Vehicle:
     stop: Optional[str] = None        # next / current stop name or code
     color: Optional[str] = None       # route colour hex without '#', if known
     cars: Optional[int] = None        # number of cars, when the feed reports the consist
+    next_stop: Optional[str] = None   # from trip updates: the next stop's name,
+    next_time: Optional[int] = None   # its predicted unix time,
+    delay: Optional[int] = None       # and how late the train is running there, in seconds (negative = early)
 
     def to_json(self):
         return {k: v for k, v in asdict(self).items() if v is not None}

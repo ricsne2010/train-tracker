@@ -21,6 +21,15 @@ Live Amtrak and commuter-rail positions on a map of US passenger track, in your 
   tourist; freight main lines, industrial track, passing sidings, yards) and hide any railroad's track from the
   list of railroads in view. Choices are remembered in the browser; **Show everything** resets them.
 * **Click any track** for its type, owner, subdivision, yard name and number of tracks.
+* **Click a train** for its route, destination, next stop with its predicted time, and how late it's running,
+  plus any service alerts about it. **Follow** keeps the map on the train as it moves; **Share** copies a link
+  that opens straight to it.
+* **Stations** from every railroad's schedule: click one for its next trains, live from the railroad's
+  predictions (Penn Station-style shared stations show each railroad's board). Search finds stations too.
+* **Trails** show where each train has been over the last 15 minutes.
+* **Colour trains by lateness** (Map layers): green on time, amber 5–15 minutes late, red over 15.
+* **Service alerts** in the panel, from each railroad that publishes them.
+* **Copy link to this view** (Map layers) shares the map as you see it (`#map=zoom/lat/lon`).
 
 ## Install and run
 
@@ -84,25 +93,35 @@ anyone who can reach the page on your network can then change the keys.
 ```
 feeds.json ──► feeds.py        one poll loop per feed (20–60 s): GTFS-RT protobuf, Amtraker JSON, NJT token flow
                   ▼
-               model.py        Vehicle: key, agency, lat/lon, train, route, bearing, speed_mph, stop …
+               realtime.py     trip updates (next stop, predicted time, delay) and service alerts
+               gtfs_static.py  each railroad's schedule: names, stations, timetables (rail only, cached)
                   ▼
-               app.py          cache ─► WebSocket /ws (snapshot on connect, then upsert/remove diffs)
-                                        GET /api/vehicles, /api/status
+               model.py        Vehicle: key, agency, lat/lon, train, route, bearing, speed_mph, next stop, delay …
+                  ▼
+               app.py          cache ─► WebSocket /ws (snapshot with trails and alerts, then upsert/remove diffs)
+                                        GET /api/vehicles, /api/status, /api/alerts, /api/stations,
+                                            /api/station/<feed>/<station id>
                   ▼
                web/            MapLibre map: NARN track + trains, agency filters, feed health, search
 ```
 
-* **Amtrak**: Transitdocs GTFS-RT, enriched with route, train number, destination and station names
-  from Amtrak's static GTFS (refreshed daily).
+* **Amtrak**: Transitdocs GTFS-RT (positions, predictions and alerts in one feed), enriched from Amtrak's
+  static GTFS.
 * **Amtraker fallback**: only polled while the Transitdocs feed is down or empty.
-* **Commuter rail**: MBTA (filtered to `CR-` routes), LIRR, Metro-North, SEPTA; Metra, Caltrain (511.org),
-  Metrolink and NJ Transit with keys.
+* **Commuter rail, no key**: MBTA (filtered to `CR-` routes), LIRR, Metro-North, SEPTA, MARC, VRE, RTD
+  Denver (A, B, G and N lines) and CapMetro Rail (Austin). **With keys**: Metra, Caltrain (511.org), Metrolink
+  and NJ Transit.
+* **Schedules**: each railroad's GTFS is downloaded in the background (refreshed daily, rail routes only, parsed
+  copy cached in the data folder) for stop names, stations and the timetable. Where a feed gives predicted
+  times but not delays (MBTA, Metro-North), lateness is worked out against the timetable.
 * Positions older than 10 minutes (`stale_after_s`) are dropped. Freight is out of scope.
 
 ### Adding a feed
 
 Add an entry to [feeds.json](src/train_tracker/feeds.json) (`kind: "gtfsrt"`, `url`, optional `params`/`headers`
-with `${ENV_VAR}` placeholders, `route_prefix` to filter a multimodal feed) and a colour in `AGENCY_COLORS` in
+with `${ENV_VAR}` placeholders, `trip_updates_url` and `alerts_url` when the railroad publishes those separately,
+`static: {"url": ...}` for its schedule, `route_prefix` or `route_ids` to pick the rail routes out of a feed shared
+with buses) and a colour in `AGENCY_COLORS` in
 [web/app.js](src/train_tracker/web/app.js). Transitland and the Mobility Database list GTFS-RT URLs.
 
 ## Development
@@ -124,7 +143,11 @@ CI runs the tests and a build on Python 3.10–3.13 for every push and pull requ
 
 * NJ Transit endpoints (`/api/GTFSRT/getToken`, `/getVehiclePositions`) follow the RailData API pattern but
   are untested with real credentials; Metra, Caltrain and Metrolink are also untested without keys.
-* Only Amtrak has static GTFS loaded, so commuter stops show raw stop IDs.
+* Metra's schedule needs its API key and NJ Transit's needs an account login, so neither is loaded yet; their
+  trains show without station names or boards.
+* SEPTA's predictions give only how late a train is, not stop-by-stop times, so SEPTA station boards are empty.
+* VRE runs at rush hour only; its feeds are empty the rest of the day. Sounder, South Shore, Tri-Rail, SunRail,
+  Brightline and others don't publish an open live feed (Sounder needs a Puget Sound OneBusAway key).
 * NARN stores one centreline per route, so the track a train is on is inferred (right-hand running), not known.
 * Car counts are typical for each service except SEPTA, whose feed lists the cars.
 * Freight track is shown, but not freight trains: railroads don't publish live freight positions.
@@ -138,12 +161,17 @@ CI runs the tests and a build on Python 3.10–3.13 for every push and pull requ
 * MBTA Commuter Rail: [MBTA V3/GTFS-RT](https://www.mbta.com/developers), MBTA Developer license
 * LIRR and Metro-North: [MTA GTFS-RT feeds](https://new.mta.info/developers), MTA data terms
 * SEPTA Regional Rail: [SEPTA GTFS-RT](https://www3.septa.org/developer/)
+* MARC: [Maryland Transit Administration](https://www.mta.maryland.gov/developer-resources) GTFS-RT
+* VRE: [Virginia Railway Express](https://www.vre.org/about/developer-resources/) GTFS-RT
+* RTD commuter rail: [RTD Denver](https://www.rtd-denver.com/open-records/open-spatial-information/real-time-feeds) GTFS-RT
+* CapMetro Rail: [Capital Metro](https://www.capmetro.org/metrolabs) GTFS-RT via [data.texas.gov](https://data.texas.gov)
 * Metra, Caltrain ([511.org](https://511.org/open-data)), Metrolink and NJ Transit: their GTFS-RT feeds, with your own keys
 
 **Data and reference**
 
 * Track geometry: FRA [North American Rail Network](https://geodata.bts.gov/datasets/usdot::north-american-rail-network-lines/about) lines, public domain
-* Amtrak schedule, routes and stations: [Amtrak GTFS](https://content.amtrak.com/content/gtfs/GTFS.zip)
+* Schedules, routes and stations: each railroad's published GTFS (Amtrak, MBTA, MTA LIRR and Metro-North,
+  SEPTA, Caltrain via Trillium, Metrolink, MARC, VRE, RTD, CapMetro), under each agency's data terms
 * NJ Transit RailData endpoints: [jtarrio/raildata](https://github.com/jtarrio/raildata) (Apache-2.0), used as reference
 
 **Code, map and fonts**

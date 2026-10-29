@@ -4,6 +4,15 @@ All notable changes to this project are listed here. Versions follow [Semantic V
 
 ## [Unreleased]
 
+- Next stop, predicted time and how late each train is running, from each railroad's trip updates (worked
+  out against the timetable where the feed only gives times).
+- Stations from every railroad's schedule; click one for its next trains. Search finds stations.
+- Service alerts in the panel and in train and station popups.
+- Follow a train, and share links to a train (`#train=`) or the current view (`#map=`).
+- Trails: where each train has been over the last 15 minutes.
+- Colour trains by lateness.
+- New railroads: MARC, VRE, RTD Denver commuter rail and CapMetro Rail (Austin), no keys needed.
+- Each railroad's schedule loads in the background (rail only, parsed copy cached), so start-up no longer waits.
 - The map opens with the lower 48 fitted beside the panel (or above it on a phone) at any window size, and
   stays fitted while the window settles or is resized, until you move the map.
 - A "More" prompt with a bobbing arrow at the bottom of the side panel and the API keys page while there's
