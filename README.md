@@ -185,6 +185,11 @@ CI runs the tests and a build on Python 3.10–3.13 for every push and pull requ
 [docs/INSTALL.md](docs/INSTALL.md) is the guide; after editing it, rebuild the printable copy with
 `python3 tools/make_guide_pdf.py` (needs reportlab, Pillow and the DejaVu fonts). Releases attach the PDF.
 
+### Installer icons
+
+`python3 tools/make_icons.py` draws the Start, Stop and Uninstall icons (a locomotive at night with the
+Project Moon Pi patch) into `installer/icons/`, for both macOS (`.icns`) and Windows (`.ico`).
+
 ### Releasing
 
 1. Write the changes under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md) and commit.
