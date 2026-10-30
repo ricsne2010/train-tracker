@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Trains">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -91,11 +91,15 @@
   </details>
   <button id="toggle" aria-label="Toggle panel">☰</button>
 </aside>
-<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="track.js"></script>
-<script src="splashfx.js"></script>
-<script src="more.js"></script>
+<!-- MapLibre 6 comes only as a module; the deferred scripts after it run in order, once it has loaded -->
+<script type="module">
+  import * as maplibregl from "https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.mjs";
+  window.maplibregl = maplibregl;
+</script>
+<script src="track.js" defer></script>
+<script src="splashfx.js" defer></script>
+<script src="more.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
-<script src="app.js"></script>
+<script src="app.js" defer></script>
 </body>
 </html>

@@ -37,11 +37,11 @@ map is only visible on your own network unless you set up remote access (section
 | | Requirement |
 |---|---|
 | **Computer for the server** | A Mac (macOS 11 Big Sur or newer), a Windows 10 or 11 PC, a Linux computer, or a Raspberry Pi 4 or 5 (a Pi 3B+ works, more slowly) |
-| **Python** | Version 3.10 or newer, from [python.org](https://www.python.org/downloads/). 3.12 or newer is recommended: 3.10 stopped getting security fixes in October 2026 |
+| **Python** | Version 3.11 or newer, from [python.org](https://www.python.org/downloads/). 3.12 or newer is recommended |
 | **Memory** | About 150–200 MB while running |
 | **Disk space** | About 200 MB: the app (~40 MB) and its downloaded maps and schedules (~140 MB) |
 | **Internet** | Always on while the server runs. The first start downloads about 140 MB; after that it uses about 130 MB an hour (about 3 GB a day if left running all day) |
-| **To view the map** | A current web browser: Safari, Chrome, Edge or Firefox. Phones and tablets: iPhone or iPad with iOS 15 or newer, or Android with current Chrome |
+| **To view the map** | A current web browser: Safari, Chrome, Edge or Firefox. Phones and tablets: iPhone or iPad with iOS 16.4 or newer, or Android with current Chrome. The map needs WebGL 2, which every browser from 2023 on has |
 | **Phones and tablets** | Must be on the same Wi-Fi as the server (or connected through remote access, section 7) |
 
 The server is light: it sits at almost no CPU between updates. It runs in the background as a service, with
@@ -237,7 +237,7 @@ Raspberry Pi) or `C:\Users\<your name>\.train-tracker` (Windows).
 
 | What you see | What to do |
 |---|---|
-| "Needs Python 3.10 or newer" | Install Python from python.org (step 1). On Windows, reinstall and tick **Add python.exe to PATH** |
+| "Needs Python 3.11 or newer" | Install Python from python.org (step 1). On Windows, reinstall and tick **Add python.exe to PATH** |
 | "Train Tracker didn't start" | Its messages say why: on a Mac in `~/Library/Logs/Train Tracker.log`, on Windows in `%LOCALAPPDATA%\TrainTracker\train-tracker.log`. A common cause is another program using port 7500 |
 | Stop says it's still running | Another program is serving on port 7500 (perhaps a copy started by hand). Close it, or restart the computer |
 | The browser didn't open | Open **http://127.0.0.1:7500** yourself |

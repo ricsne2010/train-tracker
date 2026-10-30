@@ -1,7 +1,7 @@
 # Install US Train Tracker on this PC (run by "Install Train Tracker.bat"; run it again later to update).
 #
 # Installs the program in %LOCALAPPDATA%\TrainTracker and puts Start Train Tracker and Stop Train Tracker on
-# the Desktop and in the Start menu. Needs Python 3.10 or newer from python.org.
+# the Desktop and in the Start menu. Needs Python 3.11 or newer from python.org.
 # Designed and Created by Project Moon Pi.
 #
 # For unattended installs, answer the questions ahead: TT_PHONES=yes|no TT_AUTOSTART=yes|no TT_OPEN=no
@@ -23,8 +23,8 @@ function Run($exe, $argv, $what) {
 
 Write-Host 'US Train Tracker installer - Designed and Created by Project Moon Pi'
 
-# Python 3.10 or newer: the "py" launcher from python.org, or python on the PATH
-$check = @('-c', 'import sys; sys.exit(sys.version_info < (3, 10))')
+# Python 3.11 or newer: the "py" launcher from python.org, or python on the PATH
+$check = @('-c', 'import sys; sys.exit(sys.version_info < (3, 11))')
 $py = $null
 foreach ($c in @(@{exe = 'py'; pre = @('-3')}, @{exe = 'python'; pre = @()})) {
     if (-not (Get-Command $c.exe -ErrorAction SilentlyContinue)) { continue }
@@ -33,9 +33,9 @@ foreach ($c in @(@{exe = 'py'; pre = @('-3')}, @{exe = 'python'; pre = @()})) {
     if ($LASTEXITCODE -eq 0) { $py = $c; break }
 }
 if (-not $py) {
-    Write-Host 'Train Tracker needs Python 3.10 or newer from https://www.python.org/downloads/'
+    Write-Host 'Train Tracker needs Python 3.11 or newer from https://www.python.org/downloads/'
     $go = [System.Windows.Forms.MessageBox]::Show(
-        "Train Tracker needs Python 3.10 or newer.`n`nClick OK to open python.org. In the installer, tick `"Add python.exe to PATH`", then run Install Train Tracker again.",
+        "Train Tracker needs Python 3.11 or newer.`n`nClick OK to open python.org. In the installer, tick `"Add python.exe to PATH`", then run Install Train Tracker again.",
         'Install Train Tracker', 'OKCancel', 'Information')
     if ($go -eq 'OK') { Start-Process 'https://www.python.org/downloads/' }
     exit 1

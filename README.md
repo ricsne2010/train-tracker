@@ -13,7 +13,7 @@ Live Amtrak and commuter-rail positions on a map of US passenger track, in your 
 | 🍎 **[Download for Mac](https://github.com/ricsne2010/train-tracker/releases/latest/download/US-Train-Tracker-for-Mac.zip)** | Open the zip, double-click **Install Train Tracker.command** |
 | 🪟 **[Download for Windows](https://github.com/ricsne2010/train-tracker/releases/latest/download/US-Train-Tracker-for-Windows.zip)** | Extract the zip, double-click **Install Train Tracker.bat** |
 
-Both need Python 3.10 or newer from [python.org](https://www.python.org/downloads/). The installer sets Train Tracker
+Both need Python 3.11 or newer from [python.org](https://www.python.org/downloads/). The installer sets Train Tracker
 up as a background service with **Start** and **Stop** icons. Step by step, including Raspberry Pi, iPhone and
 Android: the **[Installation Guide](docs/INSTALL.md)** ([printable PDF](docs/US-Train-Tracker-Install-Guide.pdf)).
 
@@ -41,11 +41,11 @@ shared beyond your own network unless you set up remote access (the guide covers
 | | |
 |---|---|
 | **Server computer** | macOS 11 or newer, Windows 10 or 11, Linux, or a Raspberry Pi 4 or 5 (3B+ works, more slowly) |
-| **Python** | 3.10 or newer from [python.org](https://www.python.org/downloads/) (3.12+ recommended; 3.10 is out of security support) |
+| **Python** | 3.11 or newer from [python.org](https://www.python.org/downloads/) (3.12+ recommended) |
 | **Memory** | about 150–200 MB while running |
 | **Disk** | about 200 MB (app ~40 MB, downloaded maps and schedules ~140 MB) |
 | **Internet** | always on while running: ~140 MB on first start, then about 130 MB an hour |
-| **To view the map** | a current Safari, Chrome, Edge or Firefox; iPhone/iPad on iOS 15+, or Android with current Chrome |
+| **To view the map** | a current Safari, Chrome, Edge or Firefox; iPhone/iPad on iOS 16.4+, or Android with current Chrome (the map needs WebGL 2) |
 
 ## On the map
 
@@ -87,7 +87,7 @@ Run the installer again to update or to change your answers. With phones allowed
 address and a QR code to scan. Details, the Raspberry Pi setup and troubleshooting are in the
 [Installation Guide](docs/INSTALL.md).
 
-**From the command line** (Python 3.10 or newer):
+**From the command line** (Python 3.11 or newer):
 
 **From a release:** download the `.whl` file from the [Releases](../../releases) page, then:
 
@@ -186,7 +186,7 @@ with buses) and a colour in `AGENCY_COLORS` in
 .venv/bin/pytest -q
 ```
 
-CI runs the tests and a build on Python 3.10–3.13 for every push and pull request.
+CI runs the tests and a build on Python 3.11–3.15 for every push and pull request.
 
 ### Installation Guide
 
@@ -242,7 +242,7 @@ Project Moon Pi patch) into `installer/icons/`, for both macOS (`.icns`) and Win
 
 **Code, map and fonts**
 
-* [MapLibre GL JS](https://maplibre.org) 4.7.1, BSD-3-Clause
+* [MapLibre GL JS](https://maplibre.org) 6.16.0, BSD-3-Clause
 * Basemap tiles: © [OpenFreeMap](https://openfreemap.org), © [OpenMapTiles](https://openmaptiles.org), map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL)
 * Noto Sans (via the OpenFreeMap glyphs), SIL Open Font License 1.1
 * [aiohttp](https://github.com/aio-libs/aiohttp), Apache-2.0

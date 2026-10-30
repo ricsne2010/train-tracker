@@ -4,6 +4,11 @@ All notable changes to this project are listed here. Versions follow [Semantic V
 
 ## [Unreleased]
 
+- The map runs on MapLibre GL JS 6.16 (from 4.7.1), loaded as a module. It needs a browser with WebGL 2:
+  any current Safari, Chrome, Edge or Firefox (iPhone and iPad: iOS 16.4 or newer). An older browser now gets
+  a message saying so instead of a blank map.
+- Needs Python 3.11 or newer (3.10 is out of security support). Tested on Python 3.11 to 3.15.
+
 ## [0.3.0] - 2026-10-29
 
 - Installation Guide (docs/INSTALL.md and a printable PDF): Mac, Windows, Raspberry Pi, iPhone and Android,

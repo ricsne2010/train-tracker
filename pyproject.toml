@@ -7,7 +7,7 @@ name = "train-tracker"
 dynamic = ["version"]
 description = "Live US passenger-train map: Amtrak and commuter rail over FRA NARN track"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Project Moon Pi" }]
 dependencies = [

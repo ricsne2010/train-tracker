@@ -80,6 +80,13 @@ function homePadding() {
   return pad;
 }
 
+// MapLibre 6 needs WebGL 2 and a browser from 2023 on (Safari 16.4): say so rather than leave a blank page
+if (!window.maplibregl || !document.createElement("canvas").getContext("webgl2")) {
+  document.querySelector("#splash .loading").textContent =
+    "This browser is too old for the map. Update it (iPhone and iPad: iOS 16.4 or newer), or use current Safari, Chrome, Edge or Firefox.";
+  throw new Error("US Train Tracker needs a browser with WebGL 2 and JavaScript modules");
+}
+
 const map = new maplibregl.Map({
   container: "map",
   style: `https://tiles.openfreemap.org/styles/${dark ? "dark" : "positron"}`,

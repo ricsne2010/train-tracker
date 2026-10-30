@@ -45,7 +45,7 @@ jobs:
             printf -- '- **Mac:** [US-Train-Tracker-for-Mac.zip](https://github.com/%s/releases/download/%s/US-Train-Tracker-for-Mac.zip): open it and double-click **Install Train Tracker.command**\n' "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME"
             printf -- '- **Windows:** [US-Train-Tracker-for-Windows.zip](https://github.com/%s/releases/download/%s/US-Train-Tracker-for-Windows.zip): extract it and double-click **Install Train Tracker.bat**\n' "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME"
             printf -- '- **Raspberry Pi / Linux:** the `.whl` file below (see the guide)\n\n'
-            printf 'Both need Python 3.10 or newer from python.org. Step-by-step: the [Installation Guide](https://github.com/%s/blob/%s/docs/INSTALL.md), also attached as a PDF.\n\n## Changes\n\n' "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME"
+            printf 'Both need Python 3.11 or newer from python.org. Step-by-step: the [Installation Guide](https://github.com/%s/blob/%s/docs/INSTALL.md), also attached as a PDF.\n\n## Changes\n\n' "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME"
             cat notes.md
           } > full-notes.md && mv full-notes.md notes.md
           gh release create "$GITHUB_REF_NAME" dist/* docs/US-Train-Tracker-Install-Guide.pdf \

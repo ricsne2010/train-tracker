@@ -3,7 +3,7 @@
 #
 # It installs the program in ~/Library/Application Support/Train Tracker, sets it up as a background service,
 # and puts Start Train Tracker and Stop Train Tracker on your Desktop and in Applications › Train Tracker.
-# Needs Python 3.10 or newer from python.org. Designed and Created by Project Moon Pi.
+# Needs Python 3.11 or newer from python.org. Designed and Created by Project Moon Pi.
 #
 # For unattended installs, answer the questions ahead: TT_PHONES=yes|no TT_AUTOSTART=yes|no TT_OPEN=no
 SRC="$(cd "$(dirname "$0")" && pwd)"
@@ -17,10 +17,10 @@ ask() {   # ask "question" "no-button" "yes-button" -> prints yes or no
 }
 
 find_python() {
-  for p in python3.14 python3.13 python3.12 python3.11 python3.10 \
+  for p in python3.14 python3.13 python3.12 python3.11 \
            /Library/Frameworks/Python.framework/Versions/Current/bin/python3 /opt/homebrew/bin/python3 \
            /usr/local/bin/python3 python3; do
-    if command -v "$p" >/dev/null 2>&1 && "$p" -c 'import sys; sys.exit(sys.version_info < (3, 10))' 2>/dev/null; then
+    if command -v "$p" >/dev/null 2>&1 && "$p" -c 'import sys; sys.exit(sys.version_info < (3, 11))' 2>/dev/null; then
       command -v "$p"; return 0
     fi
   done
@@ -29,8 +29,8 @@ find_python() {
 
 echo "US Train Tracker installer - Designed and Created by Project Moon Pi"
 PY=$(find_python) || {
-  echo "Train Tracker needs Python 3.10 or newer: install it from https://www.python.org/downloads/ and run this again."
-  osascript -e 'display dialog "Train Tracker needs Python 3.10 or newer.\n\nClick Download to get it from python.org, install it, then double-click Install Train Tracker again." buttons {"Cancel", "Download"} default button "Download" with title "Install Train Tracker"' \
+  echo "Train Tracker needs Python 3.11 or newer: install it from https://www.python.org/downloads/ and run this again."
+  osascript -e 'display dialog "Train Tracker needs Python 3.11 or newer.\n\nClick Download to get it from python.org, install it, then double-click Install Train Tracker again." buttons {"Cancel", "Download"} default button "Download" with title "Install Train Tracker"' \
     -e 'if button returned of result is "Download" then open location "https://www.python.org/downloads/"' >/dev/null 2>&1 || true
   exit 1
 }
