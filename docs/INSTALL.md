@@ -123,9 +123,11 @@ and in the **Start menu › Train Tracker**:
 - **Start Train Tracker** (green ▶): starts it if it isn't running, and opens the map.
 - **Stop Train Tracker** (red ■): shuts it down.
 
-If you chose phones, Windows Defender Firewall asks about Python the first time it starts: allow it on
-**Private networks** (your home Wi-Fi). Your Wi-Fi must be set as a private network: Settings → Network &
-Internet → Wi-Fi → your network → **Private network**. Then see section 5.
+If you chose phones, the installer makes sure Windows Firewall lets them in, on home (Private) networks only.
+If it needs to change the firewall, Windows asks *"Do you want to allow this app to make changes to your
+device?"*: click **Yes**. If your Wi-Fi is set as a Public network, the installer tells you: set it to Private
+(Settings → Network & Internet → Wi-Fi → your network → **Private network**) so phones can connect. Then see
+section 5.
 
 ## 5. Use it on an iPhone, iPad or Android phone
 
@@ -239,7 +241,7 @@ Raspberry Pi) or `C:\Users\<your name>\.train-tracker` (Windows).
 | "Train Tracker didn't start" | Its messages say why: on a Mac in `~/Library/Logs/Train Tracker.log`, on Windows in `%LOCALAPPDATA%\TrainTracker\train-tracker.log`. A common cause is another program using port 7500 |
 | Stop says it's still running | Another program is serving on port 7500 (perhaps a copy started by hand). Close it, or restart the computer |
 | The browser didn't open | Open **http://127.0.0.1:7500** yourself |
-| The phone can't open the address | Check the phone is on the same Wi-Fi (not mobile data or a guest network); that you installed with **Phones too**; and that you allowed Python through the firewall. Some routers keep devices apart ("client isolation" or "AP isolation"): turn that off for your home network |
+| The phone can't open the address | Check the phone is on the same Wi-Fi (not mobile data or a guest network), and that you installed with **Phones too**. On Windows, run the installer again and click **Yes** if Windows asks for permission, and make sure your network is set to Private. On a Mac, if macOS asked whether Python may accept incoming connections, choose **Allow**. Some routers keep devices apart ("client isolation" or "AP isolation"): turn that off for your home network |
 | `raspberrypi.local` doesn't work | Use the Pi's numbered address instead: run `hostname -I` on the Pi |
 | Map shows but no track | The first start is still downloading the rail map: wait a minute and reload |
 | A railroad shows a red or amber dot | Its feed is down or its key was refused: the panel says why. Feeds come back by themselves |

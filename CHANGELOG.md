@@ -12,6 +12,9 @@ All notable changes to this project are listed here. Versions follow [Semantic V
 - `--open` opens the browser once the server is up; `--log-file` writes messages to a file.
 - "Open on your phone" in the panel: the address and a QR code, when the server listens on the network.
 - Add to Home Screen: app icon and web app manifest, so the map opens full screen like an app on iPhone.
+- Windows: with phones allowed, the installer opens the firewall for Train Tracker's port on home (Private)
+  networks, asking for admin permission only if a change is needed, and warns when the network is set to
+  Public; the uninstaller closes it again. Tested in a Windows 10 VM.
 - Raspberry Pi service file (tools/train-tracker@.service) to start at power-on.
 - Works with python.org's Python on macOS without its "Install Certificates" step (certificates from certifi).
 - Separate prediction feeds are fetched once a minute, cutting data use to about 130 MB an hour.
