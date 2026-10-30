@@ -4,6 +4,8 @@ All notable changes to this project are listed here. Versions follow [Semantic V
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-29
+
 - Installation Guide (docs/INSTALL.md and a printable PDF): Mac, Windows, Raspberry Pi, iPhone and Android,
   with machine requirements and how it works; the README now leads with both.
 - Installers for Mac (`Install Train Tracker.command`) and Windows (`Install Train Tracker.bat`): set it up as a
