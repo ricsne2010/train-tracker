@@ -41,7 +41,7 @@ if (-not $py) {
     exit 1
 }
 
-$phones = Ask $env:TT_PHONES "Should phones and tablets on your Wi-Fi be able to open the train map?`n`nThey'll find the address and a QR code in the map's panel. Windows may then ask to let Python through the firewall: allow it on Private networks."
+$phones = Ask $env:TT_PHONES "Should phones and tablets on your Wi-Fi be able to open the train map?`n`nThey'll find the address and a QR code in the map's panel. If the firewall needs opening for them, Windows asks for permission once (click Yes)."
 $autostart = Ask $env:TT_AUTOSTART "Start Train Tracker by itself whenever you sign in to Windows?`n`nOtherwise, use the Start Train Tracker icon when you want it."
 
 # an update: stop the running service first
@@ -86,18 +86,21 @@ $startupLink = Join-Path ([Environment]::GetFolderPath('Startup')) 'Train Tracke
 if ($autostart) { New-Shortcut $startupLink 'start.ps1' 'start.ico' 'Start US Train Tracker at sign-in' '-NoBrowser' }
 else { Remove-Item $startupLink -ErrorAction SilentlyContinue }
 
-# phones: open Train Tracker's port on home networks (Windows asks for permission), or close it again
+# phones: make sure the firewall lets them in on home networks (Windows asks for permission only if needed)
 $fw = Join-Path $AppDir 'firewall.ps1'
 $networkNote = ''
 if ($phones) {
-    Write-Host 'Letting phones on your home network reach Train Tracker (Windows will ask for permission)...'
-    if (-not (& $fw -Allow -Port $Port)) {
+    $pythonw = & $venvPy -c "import os, sys; print(os.path.join(sys.base_prefix, 'pythonw.exe'))"   # the program that listens
+    Write-Host 'Checking that phones on your home network can reach Train Tracker...'
+    $state = & $fw -Allow -Port $Port -Program $pythonw
+    $public = @(Get-NetConnectionProfile -ErrorAction SilentlyContinue | Where-Object NetworkCategory -eq 'Public').Count
+    if ($state -eq 'Declined') {
         $networkNote = "Windows didn't allow the firewall change, so phones can't reach the map yet. Run the installer again and click Yes when Windows asks."
-    } elseif (@(Get-NetConnectionProfile -ErrorAction SilentlyContinue | Where-Object NetworkCategory -eq 'Public').Count) {
+    } elseif ($public -and $state -ne 'AllowedPublic') {
         $networkNote = "This PC's network is set to Public, where Windows keeps other devices out. For phones to reach the map, set your home Wi-Fi to Private: Settings > Network & Internet > (your connection) > Private."
     }
 } else {
-    $null = & $fw -Port $Port
+    & $fw -Port $Port
 }
 if ($networkNote) { Write-Host $networkNote }
 
