@@ -6,8 +6,10 @@ All notable changes to this project are listed here. Versions follow [Semantic V
 
 - Installation Guide (docs/INSTALL.md and a printable PDF): Mac, Windows, Raspberry Pi, iPhone and Android,
   with machine requirements and how it works; the README now leads with both.
-- Double-click launchers for Mac (`.command`) and Windows (`.bat`), plus "(phones too)" versions that let phones
-  on the same Wi-Fi open the map; `--open` opens the browser once the server is up.
+- Installers for Mac (`Install Train Tracker.command`) and Windows (`Install Train Tracker.bat`): set it up as a
+  background service, ask about phones and starting at log-in, and add **Start Train Tracker** and **Stop Train
+  Tracker** icons (Desktop, and Applications or the Start menu) plus an uninstaller. Run again to update.
+- `--open` opens the browser once the server is up; `--log-file` writes messages to a file.
 - "Open on your phone" in the panel: the address and a QR code, when the server listens on the network.
 - Add to Home Screen: app icon and web app manifest, so the map opens full screen like an app on iPhone.
 - Raspberry Pi service file (tools/train-tracker@.service) to start at power-on.

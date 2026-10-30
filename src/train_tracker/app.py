@@ -371,6 +371,7 @@ def main(argv=None):
     ap.add_argument("--data-dir", type=Path, default=DEFAULT_DATA,
                     help="downloads and .env (default: ~/.train-tracker)")
     ap.add_argument("--open", action="store_true", help="open the map in your web browser once it's running")
+    ap.add_argument("--log-file", type=Path, help="write messages to this file (for running in the background)")
     ap.add_argument("--allow-remote-settings", action="store_true",
                     help="let other devices change API keys on the settings page (default: this computer only)")
     sub = ap.add_subparsers(dest="command")
@@ -378,7 +379,15 @@ def main(argv=None):
     sub.add_parser("fetch-track", help="re-download NARN passenger track geometry")
     args = ap.parse_args(argv)
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    fmt = "%(asctime)s %(levelname)s %(name)s: %(message)s"
+    if args.log_file:
+        from logging.handlers import RotatingFileHandler
+        args.log_file.parent.mkdir(parents=True, exist_ok=True)
+        handler = RotatingFileHandler(args.log_file, maxBytes=2_000_000, backupCount=1, encoding="utf-8")
+        logging.basicConfig(level=logging.INFO, format=fmt, handlers=[handler])
+        logging.getLogger("aiohttp.access").setLevel(logging.WARNING)   # one line per page request is noise here
+    else:
+        logging.basicConfig(level=logging.INFO, format=fmt)
     if args.command == "fetch-track":
         narn.fetch(args.data_dir / narn.FILENAME)
         return

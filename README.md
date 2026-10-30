@@ -66,11 +66,18 @@ shared beyond your own network unless you set up remote access (the guide covers
 
 ## Install and run
 
-**The easy way:** download **Source code (zip)** from the [latest release](../../releases/latest), unzip it and
-double-click **Start Train Tracker** (`.command` on a Mac, `.bat` on Windows). The first start sets everything up
-in that folder and opens the map. Use the **(phones too)** launcher to let phones on your Wi-Fi open it as well;
-the map's panel then shows the address and a QR code. Details, the Raspberry Pi setup and troubleshooting are
-in the [Installation Guide](docs/INSTALL.md).
+**The easy way (Mac or Windows):** download **Source code (zip)** from the [latest release](../../releases/latest),
+unzip it and double-click **Install Train Tracker** (`.command` on a Mac, `.bat` on Windows). The installer:
+
+* installs it for you (Mac: `~/Library/Application Support/Train Tracker`; Windows: `%LOCALAPPDATA%\TrainTracker`),
+* asks whether phones on your Wi-Fi may open the map, and whether it should start when you log in,
+* sets it up as a **background service** (a LaunchAgent on macOS, a hidden process on Windows), and
+* puts two icons on your Desktop (and in Applications or the Start menu): **Start Train Tracker** starts the
+  service and opens the map; **Stop Train Tracker** shuts it down. **Uninstall Train Tracker** is next to them.
+
+Run the installer again to update or to change your answers. With phones allowed, the map's panel shows the
+address and a QR code to scan. Details, the Raspberry Pi setup and troubleshooting are in the
+[Installation Guide](docs/INSTALL.md).
 
 **From the command line** (Python 3.10 or newer):
 
@@ -99,7 +106,8 @@ FRA track map (~4 MB) and Amtrak's schedule into `~/.train-tracker/`.
 | `--host` | `127.0.0.1` | `0.0.0.0` to open it from a phone or another computer on your network |
 | `--data-dir` | `~/.train-tracker` | downloads and `.env` |
 | `--allow-remote-settings` | off | let other devices change API keys on the settings page |
-| `--open` | off | open the map in your browser once it's running (the launchers use this) |
+| `--open` | off | open the map in your browser once it's running |
+| `--log-file` | | write messages to a file instead of the terminal (the background service uses this) |
 | `--config` | bundled `feeds.json` | your own feed list |
 | `fetch-track` | | re-download the NARN track map |
 | `--version` | | |
