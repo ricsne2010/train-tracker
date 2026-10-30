@@ -8,6 +8,8 @@ if (-not $unattended) {
     if ($ok -ne 'OK') { exit 0 }
 }
 & (Join-Path $AppDir 'stop.ps1') -Quiet
+$cfg = Get-Content (Join-Path $AppDir 'settings.json') -Raw | ConvertFrom-Json
+if (Test-Path (Join-Path $AppDir 'firewall.ps1')) { $null = & (Join-Path $AppDir 'firewall.ps1') -Port $cfg.port }   # close the port for phones
 
 $desktop = [Environment]::GetFolderPath('Desktop')
 Remove-Item (Join-Path $desktop 'Start Train Tracker.lnk'), (Join-Path $desktop 'Stop Train Tracker.lnk') -ErrorAction SilentlyContinue

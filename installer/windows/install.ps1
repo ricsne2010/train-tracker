@@ -55,7 +55,7 @@ Run $venvPy @('-m', 'pip', 'install', '--quiet', '--upgrade', 'pip') 'Updating p
 Run $venvPy @('-m', 'pip', 'install', '--quiet', '--upgrade', $Src) 'Installing Train Tracker'
 $version = & $venvPy -c 'import train_tracker; print(train_tracker.__version__)'
 
-foreach ($f in 'start.ps1', 'stop.ps1', 'uninstall.ps1') { Copy-Item (Join-Path $PSScriptRoot $f) $AppDir -Force }
+foreach ($f in 'start.ps1', 'stop.ps1', 'uninstall.ps1', 'firewall.ps1') { Copy-Item (Join-Path $PSScriptRoot $f) $AppDir -Force }
 foreach ($f in 'start.ico', 'stop.ico', 'app.ico') { Copy-Item (Join-Path $Src "installer\icons\$f") $AppDir -Force }
 Get-ChildItem $AppDir -File | Unblock-File      # drop the "downloaded from the internet" mark on our own copies
 @{ port = $Port; phones = $phones; autostart = $autostart; version = "$version" } | ConvertTo-Json |
@@ -86,11 +86,26 @@ $startupLink = Join-Path ([Environment]::GetFolderPath('Startup')) 'Train Tracke
 if ($autostart) { New-Shortcut $startupLink 'start.ps1' 'start.ico' 'Start US Train Tracker at sign-in' '-NoBrowser' }
 else { Remove-Item $startupLink -ErrorAction SilentlyContinue }
 
+# phones: open Train Tracker's port on home networks (Windows asks for permission), or close it again
+$fw = Join-Path $AppDir 'firewall.ps1'
+$networkNote = ''
+if ($phones) {
+    Write-Host 'Letting phones on your home network reach Train Tracker (Windows will ask for permission)...'
+    if (-not (& $fw -Allow -Port $Port)) {
+        $networkNote = "Windows didn't allow the firewall change, so phones can't reach the map yet. Run the installer again and click Yes when Windows asks."
+    } elseif (@(Get-NetConnectionProfile -ErrorAction SilentlyContinue | Where-Object NetworkCategory -eq 'Public').Count) {
+        $networkNote = "This PC's network is set to Public, where Windows keeps other devices out. For phones to reach the map, set your home Wi-Fi to Private: Settings > Network & Internet > (your connection) > Private."
+    }
+} else {
+    $null = & $fw -Port $Port
+}
+if ($networkNote) { Write-Host $networkNote }
+
 Write-Host "Installed US Train Tracker $version. Starting it..."
 if ($env:TT_OPEN -eq 'no') { & (Join-Path $AppDir 'start.ps1') -NoBrowser } else { & (Join-Path $AppDir 'start.ps1') }
 Write-Host 'Done. Use Start Train Tracker and Stop Train Tracker on your Desktop (also in the Start menu).'
 if (-not $env:TT_PHONES) {
     [System.Windows.Forms.MessageBox]::Show(
-        "Train Tracker is installed and running.`n`nUse Start Train Tracker and Stop Train Tracker on your Desktop (also in the Start menu, under Train Tracker).`n`nYou can delete the downloaded folder now.",
+        "Train Tracker is installed and running.`n`nUse Start Train Tracker and Stop Train Tracker on your Desktop (also in the Start menu, under Train Tracker).`n`nYou can delete the downloaded folder now." + $(if ($networkNote) { "`n`n$networkNote" } else { '' }),
         'Install Train Tracker', 'OK', 'Information') | Out-Null
 }
