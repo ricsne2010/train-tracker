@@ -59,10 +59,10 @@ You only do this once. If Python is already installed, skip this step: the insta
 
 ### Step 2: Download US Train Tracker
 
-1. Go to the [Releases page](https://github.com/ricsne2010/train-tracker/releases/latest).
-2. Under **Assets**, click **Source code (zip)**.
-3. Open the downloaded zip (Safari usually unzips it for you). You get a folder named like
-   `train-tracker-0.3.0`.
+1. Download **[US Train Tracker for Mac](https://github.com/ricsne2010/train-tracker/releases/latest/download/US-Train-Tracker-for-Mac.zip)** (it's also on the
+   [Releases page](https://github.com/ricsne2010/train-tracker/releases/latest), as **US-Train-Tracker-for-Mac.zip**).
+2. Open the downloaded zip (Safari usually unzips it for you). You get a folder named
+   **US Train Tracker for Mac**, with a READ ME FIRST note and this guide inside.
 
 ### Step 3: Run the installer
 
@@ -98,10 +98,10 @@ If you chose **Phones too** and macOS asks whether Python may accept incoming ne
 
 ### Step 2: Download US Train Tracker
 
-1. Go to the [Releases page](https://github.com/ricsne2010/train-tracker/releases/latest).
-2. Under **Assets**, click **Source code (zip)**.
-3. In your Downloads folder, right-click the zip and choose **Extract All…**. You get a folder named like
-   `train-tracker-0.3.0`.
+1. Download **[US Train Tracker for Windows](https://github.com/ricsne2010/train-tracker/releases/latest/download/US-Train-Tracker-for-Windows.zip)** (it's also on the
+   [Releases page](https://github.com/ricsne2010/train-tracker/releases/latest), as **US-Train-Tracker-for-Windows.zip**).
+2. In your Downloads folder, right-click the zip and choose **Extract All…**. You get a folder named
+   **US Train Tracker for Windows**, with a READ ME FIRST note and this guide inside.
 
 ### Step 3: Run the installer
 
@@ -220,7 +220,7 @@ that railroad straight away.
 
 ## 9. Updating and removing
 
-**Updating (Mac or Windows):** download the new **Source code (zip)** and run its installer, just like the
+**Updating (Mac or Windows):** download the new zip for your computer and run its installer, just like the
 first time. It stops Train Tracker, updates it, and keeps your settings, API keys and downloaded data.
 Running the installer again is also how you change your answers (phones, start at log-in).
 

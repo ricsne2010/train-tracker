@@ -25,6 +25,8 @@ jobs:
 
       - run: pytest -q
       - run: python -m build
+      - name: Mac and Windows downloads
+        run: python tools/make_downloads.py
 
       - name: Release notes from CHANGELOG.md
         run: |
@@ -38,7 +40,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          printf '\n**New here?** Download **Source code (zip)** below and follow the [Installation Guide](https://github.com/%s/blob/%s/docs/INSTALL.md) (also attached as a PDF).\n' \
-            "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" >> notes.md
+          {
+            printf '## Download\n\n'
+            printf -- '- **Mac:** [US-Train-Tracker-for-Mac.zip](https://github.com/%s/releases/download/%s/US-Train-Tracker-for-Mac.zip): open it and double-click **Install Train Tracker.command**\n' "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME"
+            printf -- '- **Windows:** [US-Train-Tracker-for-Windows.zip](https://github.com/%s/releases/download/%s/US-Train-Tracker-for-Windows.zip): extract it and double-click **Install Train Tracker.bat**\n' "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME"
+            printf -- '- **Raspberry Pi / Linux:** the `.whl` file below (see the guide)\n\n'
+            printf 'Both need Python 3.10 or newer from python.org. Step-by-step: the [Installation Guide](https://github.com/%s/blob/%s/docs/INSTALL.md), also attached as a PDF.\n\n## Changes\n\n' "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME"
+            cat notes.md
+          } > full-notes.md && mv full-notes.md notes.md
           gh release create "$GITHUB_REF_NAME" dist/* docs/US-Train-Tracker-Install-Guide.pdf \
             --title "$GITHUB_REF_NAME" --notes-file notes.md

@@ -6,8 +6,16 @@
 
 Live Amtrak and commuter-rail positions on a map of US passenger track, in your browser.
 
-**New here? Follow the [Installation Guide](docs/INSTALL.md)** ([printable PDF](docs/US-Train-Tracker-Install-Guide.pdf)):
-step by step for Mac, Windows, Raspberry Pi, iPhone and Android, no programming needed.
+## Download
+
+| | |
+|---|---|
+| 🍎 **[Download for Mac](https://github.com/ricsne2010/train-tracker/releases/latest/download/US-Train-Tracker-for-Mac.zip)** | Open the zip, double-click **Install Train Tracker.command** |
+| 🪟 **[Download for Windows](https://github.com/ricsne2010/train-tracker/releases/latest/download/US-Train-Tracker-for-Windows.zip)** | Extract the zip, double-click **Install Train Tracker.bat** |
+
+Both need Python 3.10 or newer from [python.org](https://www.python.org/downloads/). The installer sets Train Tracker
+up as a background service with **Start** and **Stop** icons. Step by step, including Raspberry Pi, iPhone and
+Android: the **[Installation Guide](docs/INSTALL.md)** ([printable PDF](docs/US-Train-Tracker-Install-Guide.pdf)).
 
 ## How it works
 
@@ -66,8 +74,8 @@ shared beyond your own network unless you set up remote access (the guide covers
 
 ## Install and run
 
-**The easy way (Mac or Windows):** download **Source code (zip)** from the [latest release](../../releases/latest),
-unzip it and double-click **Install Train Tracker** (`.command` on a Mac, `.bat` on Windows). The installer:
+**The easy way (Mac or Windows):** download **[for Mac](https://github.com/ricsne2010/train-tracker/releases/latest/download/US-Train-Tracker-for-Mac.zip)** or **[for Windows](https://github.com/ricsne2010/train-tracker/releases/latest/download/US-Train-Tracker-for-Windows.zip)** (also on the
+[latest release](../../releases/latest)), unzip it and double-click **Install Train Tracker**. The installer:
 
 * installs it for you (Mac: `~/Library/Application Support/Train Tracker`; Windows: `%LOCALAPPDATA%\TrainTracker`),
 * asks whether phones on your Wi-Fi may open the map, and whether it should start when you log in,
